@@ -1,7 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Avanzamento posa condotta</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -10,49 +11,67 @@
 
   <style>
     body { font-family: Arial, sans-serif; margin: 12px; }
-    #map { height: 650px; border: 1px solid #ccc; border-radius: 8px; }
+    #map { height: 78vh; border: 1px solid #ddd; border-radius: 10px; }
+    .legend { margin: 10px 0; font-size: 14px; color: #444; }
   </style>
 </head>
-<body>
 
-<h2>Avanzamento posa condotta</h2>
-<div id="map"></div>
+<body>
+  <h2>Avanzamento posa condotta</h2>
+  <div class="legend">Punti = avanzamento calcolato da <code>done/tot</code> e proiettato sulla geometria.</div>
+  <div id="map"></div>
 
 <script>
-  const map = L.map('map');
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  const map = L.map("map");
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 20,
-    attribution: '&copy; OpenStreetMap'
+    attribution: "&copy; OpenStreetMap"
   }).addTo(map);
 
-  // --- util: calcola un punto "along" su LineString o MultiLineString ---
-  function pointAlongFeature(feature, distanceMeters) {
-    // Se è LineString, semplice
-    if (feature.geometry.type === "LineString") {
-      return turf.along(feature, distanceMeters, { units: "meters" });
+  // --- Helpers MultiLineString ---
+  function asLineStrings(feature) {
+    const g = feature.geometry;
+    if (!g) return [];
+    if (g.type === "LineString") {
+      return [turf.lineString(g.coordinates, feature.properties)];
     }
+    if (g.type === "MultiLineString") {
+      return g.coordinates.map(coords => turf.lineString(coords, feature.properties));
+    }
+    return [];
+  }
 
-    // Se è MultiLineString: scorri i segmenti (flatten) e trova dove cade la distanza
-    if (feature.geometry.type === "MultiLineString") {
-      const parts = turf.flatten(feature).features; // ogni parte diventa LineString
-      let remaining = distanceMeters;
+  function lengthMetersOfLineStrings(lines) {
+    // turf.length default in km if units=kilometers; in meters with units:"meters"
+    return lines.reduce((sum, ls) => sum + turf.length(ls, { units: "meters" }), 0);
+  }
 
-      for (const part of parts) {
-        const len = turf.length(part, { units: "meters" });
-        if (remaining <= len) {
-          return turf.along(part, remaining, { units: "meters" });
-        }
-        remaining -= len;
+  // Distanza "along" su MultiLineString (anche spezzato): cammina gli spezzoni in ordine
+  function pointAlongMulti(lines, distMeters) {
+    let remaining = distMeters;
+
+    for (const ls of lines) {
+      const segLen = turf.length(ls, { units: "meters" });
+      if (remaining <= segLen) {
+        return turf.along(ls, remaining, { units: "meters" });
       }
-
-      // Se superi la lunghezza totale, torna l'ultimo punto dell'ultima parte
-      const last = parts[parts.length - 1];
-      const coords = last.geometry.coordinates;
-      const lastCoord = coords[coords.length - 1];
-      return turf.point(lastCoord);
+      remaining -= segLen;
     }
 
-    throw new Error("Geometria non supportata: " + feature.geometry.type);
+    // Se dist supera la lunghezza totale, ritorna ultimo punto dell’ultimo spezzone
+    const last = lines[lines.length - 1];
+    const coords = last.geometry.coordinates;
+    const lastCoord = coords[coords.length - 1];
+    return turf.point(lastCoord);
+  }
+
+  // Colori per ditta (semplice hash deterministico)
+  function colorForString(s) {
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
+    const hue = h % 360;
+    return hsl(${hue} 70% 40%);
   }
 
   Promise.all([
@@ -60,52 +79,68 @@
     fetch("avanzamento.json").then(r => r.json())
   ]).then(([tronchi, avanzamento]) => {
 
-    // Disegna linee
-    const lineLayer = L.geoJSON(tronchi, {
-      style: (f) => ({ color: "#666", weight: 4 }),
-      onEachFeature: (f, layer) => {
-        const id = (f.properties && (f.properties.fid ?? f.properties.tronco ?? f.properties.id)) + "";
-        const ditta = f.properties?.Ditta ?? "";
-        layer.bindTooltip(Tronco ${id}${ditta ? " — " + ditta : ""});
-      }
-    }).addTo(map);
+    const bounds = [];
 
-    // Punti avanzamento
     tronchi.features.forEach(f => {
-      const id = (f.properties && (f.properties.fid ?? f.properties.tronco ?? f.properties.id)) + "";
-      const dati = avanzamento[id];
-      if (!dati) return;
+      const id = (f.properties && (f.properties.fid ?? f.properties.tronco))?.toString();
+      if (!id) return;
 
-      const ditta = f.properties?.Ditta ?? "";
+      const ditta = (f.properties && f.properties.Ditta) ? f.properties.Ditta : "—";
+      const lines = asLineStrings(f);
+      if (lines.length === 0) return;
 
-      // lunghezza reale della geometria (m) per posizionare il punto
-      const geomLen = turf.length(f, { units: "meters" });
+      // Disegna linea (colore per ditta)
+      const color = colorForString(ditta);
+      L.geoJSON(f, { style: { color, weight: 5, opacity: 0.85 } }).addTo(map);
 
-      // percentuale da dati contabili (done/tot), clamp 0..1
-      const perc = (dati.tot > 0) ? Math.max(0, Math.min(dati.done / dati.tot, 1)) : 0;
+      // Bounds
+      lines.forEach(ls => {
+        const bb = turf.bbox(ls);
+        bounds.push([[bb[1], bb[0]], [bb[3], bb[2]]]);
+      });
 
-      // distanza lungo la geometria
-      const dist = geomLen * perc;
+      // Se non ho dati avanzamento per quel fid, non metto il punto
+      const a = avanzamento[id];
+      if (!a) return;
 
-      const p = pointAlongFeature(f, dist);
+      // percentuale contabile
+      const perc = (a.tot > 0) ? Math.max(0, Math.min(a.done / a.tot, 1)) : 0;
+
+      // lunghezza geometrica totale (anche multi)
+      const geoLen = lengthMetersOfLineStrings(lines);
+
+      // distanza lungo geometria: proietto done/tot sulla lunghezza geometrica
+      const dist = geoLen * perc;
+
+      const p = pointAlongMulti(lines, dist);
       const [lng, lat] = p.geometry.coordinates;
 
       L.circleMarker([lat, lng], {
         radius: 7,
-        color: "red",
-        fillColor: "red",
-        fillOpacity: 1
+        color: "#d10000",
+        fillColor: "#d10000",
+        fillOpacity: 1,
+        weight: 2
       }).addTo(map).bindPopup(`
-        <b>Tronco ${id}</b>${ditta ? "<br>" + ditta : ""}<br>
-        ${Number(dati.done).toFixed(2)} / ${Number(dati.tot).toFixed(2)} m<br>
-        ${(perc * 100).toFixed(1)} %
+        <b>Tronco ${id}</b><br>
+        <b>Ditta:</b> ${ditta}<br>
+        <b>Posati:</b> ${a.done.toFixed(2)} m<br>
+        <b>Totali:</b> ${a.tot.toFixed(2)} m<br>
+        <b>Avanzamento:</b> ${(perc * 100).toFixed(1)}%
       `);
     });
 
-    map.fitBounds(lineLayer.getBounds(), { padding: [20, 20] });
-  }).catch(err => {
+    // Fit bounds
+    if (bounds.length) {
+      const b = bounds.reduce((acc, bb) => acc.extend(bb), L.latLngBounds(bounds[0]));
+      map.fitBounds(b.pad(0.08));
+    } else {
+      map.setView([44.99, 9.50], 12);
+    }
+  })
+  .catch(err => {
     console.error(err);
-    alert("Errore nel caricamento dei file. Controlla che tronchi.geojson e avanzamento.json siano in repo e pubblici.");
+    alert("Errore nel caricamento dei file: controlla che tronchi.geojson e avanzamento.json siano nella stessa cartella di index.html");
   });
 </script>
 
