@@ -1,61 +1,112 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<title>Avanzamento posa condotta</title>
+  <meta charset="utf-8" />
+  <title>Avanzamento posa condotta</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 
-<style>
-#map { height: 600px; }
-</style>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 12px; }
+    #map { height: 650px; border: 1px solid #ccc; border-radius: 8px; }
+  </style>
 </head>
-
 <body>
+
 <h2>Avanzamento posa condotta</h2>
 <div id="map"></div>
 
 <script>
-const map = L.map('map').setView([45.10, 9.12], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-
-Promise.all([
-  fetch("tronchi.geojson").then(r => r.json()),
-  fetch("avanzamento.json").then(r => r.json())
-]).then(([tronchi, avanzamento]) => {
-
-  const layerTronchi = L.geoJSON(tronchi, {
-    style: { color: "#666", weight: 4 }
+  const map = L.map('map');
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 20,
+    attribution: '&copy; OpenStreetMap'
   }).addTo(map);
 
-  tronchi.features.forEach(f => {
-    const id = f.properties.tronco;
-    const dati = avanzamento[id];
-    if (!dati) return;
+  // --- util: calcola un punto "along" su LineString o MultiLineString ---
+  function pointAlongFeature(feature, distanceMeters) {
+    // Se è LineString, semplice
+    if (feature.geometry.type === "LineString") {
+      return turf.along(feature, distanceMeters, { units: "meters" });
+    }
 
-    const linea = f;
-    const lungTot = turf.length(linea, { units: "meters" });
-    const perc = Math.min(dati.done / dati.tot, 1);
-    const dist = lungTot * perc;
+    // Se è MultiLineString: scorri i segmenti (flatten) e trova dove cade la distanza
+    if (feature.geometry.type === "MultiLineString") {
+      const parts = turf.flatten(feature).features; // ogni parte diventa LineString
+      let remaining = distanceMeters;
 
-    const punto = turf.along(linea, dist, { units: "meters" });
+      for (const part of parts) {
+        const len = turf.length(part, { units: "meters" });
+        if (remaining <= len) {
+          return turf.along(part, remaining, { units: "meters" });
+        }
+        remaining -= len;
+      }
 
-    L.circleMarker(
-      [punto.geometry.coordinates[1], punto.geometry.coordinates[0]],
-      { radius: 7, color: "red", fillColor: "red", fillOpacity: 1 }
-    )
-    .addTo(map)
-    .bindPopup(`
-      <b>Tronco ${id}</b><br>
-      ${dati.done.toFixed(1)} / ${dati.tot.toFixed(1)} m<br>
-      ${(perc*100).toFixed(1)} %
-    `);
+      // Se superi la lunghezza totale, torna l'ultimo punto dell'ultima parte
+      const last = parts[parts.length - 1];
+      const coords = last.geometry.coordinates;
+      const lastCoord = coords[coords.length - 1];
+      return turf.point(lastCoord);
+    }
+
+    throw new Error("Geometria non supportata: " + feature.geometry.type);
+  }
+
+  Promise.all([
+    fetch("tronchi.geojson").then(r => r.json()),
+    fetch("avanzamento.json").then(r => r.json())
+  ]).then(([tronchi, avanzamento]) => {
+
+    // Disegna linee
+    const lineLayer = L.geoJSON(tronchi, {
+      style: (f) => ({ color: "#666", weight: 4 }),
+      onEachFeature: (f, layer) => {
+        const id = (f.properties && (f.properties.fid ?? f.properties.tronco ?? f.properties.id)) + "";
+        const ditta = f.properties?.Ditta ?? "";
+        layer.bindTooltip(Tronco ${id}${ditta ? " — " + ditta : ""});
+      }
+    }).addTo(map);
+
+    // Punti avanzamento
+    tronchi.features.forEach(f => {
+      const id = (f.properties && (f.properties.fid ?? f.properties.tronco ?? f.properties.id)) + "";
+      const dati = avanzamento[id];
+      if (!dati) return;
+
+      const ditta = f.properties?.Ditta ?? "";
+
+      // lunghezza reale della geometria (m) per posizionare il punto
+      const geomLen = turf.length(f, { units: "meters" });
+
+      // percentuale da dati contabili (done/tot), clamp 0..1
+      const perc = (dati.tot > 0) ? Math.max(0, Math.min(dati.done / dati.tot, 1)) : 0;
+
+      // distanza lungo la geometria
+      const dist = geomLen * perc;
+
+      const p = pointAlongFeature(f, dist);
+      const [lng, lat] = p.geometry.coordinates;
+
+      L.circleMarker([lat, lng], {
+        radius: 7,
+        color: "red",
+        fillColor: "red",
+        fillOpacity: 1
+      }).addTo(map).bindPopup(`
+        <b>Tronco ${id}</b>${ditta ? "<br>" + ditta : ""}<br>
+        ${Number(dati.done).toFixed(2)} / ${Number(dati.tot).toFixed(2)} m<br>
+        ${(perc * 100).toFixed(1)} %
+      `);
+    });
+
+    map.fitBounds(lineLayer.getBounds(), { padding: [20, 20] });
+  }).catch(err => {
+    console.error(err);
+    alert("Errore nel caricamento dei file. Controlla che tronchi.geojson e avanzamento.json siano in repo e pubblici.");
   });
-
-  map.fitBounds(layerTronchi.getBounds());
-});
 </script>
 
 </body>
