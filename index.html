@@ -403,18 +403,48 @@
       `;
       tbody.appendChild(tr);
 
-      // 1) linea base intera (leggera)
-      L.geoJSON(f, {
-        style: { color: col, weight: 4, opacity: 1 }
-      }).addTo(map);
-
-      // 2) segmento posato (tratteggiato)
-      const seg = laidSegment(f, done, tot);
-      if (seg) {
-        L.geoJSON(seg, {
-          style: { color: col, weight: 5, opacity: 0.95, dashArray: "10 8" }
-        }).addTo(map);
-      }
+        // Lunghezza totale
+        const totalKm = turf.length(f, { units: "kilometers" });
+        
+        if (totalKm > 0 && tot > 0) {
+        
+          const perc = Math.min(done / tot, 1);
+          const doneKm = totalKm * perc;
+        
+          let segPosato = null;
+          let segResiduo = null;
+        
+          try {
+        
+            if (!REVERSE_PROGRESS) {
+        
+              segPosato = turf.lineSliceAlong(f, 0, doneKm, { units: "kilometers" });
+              segResiduo = turf.lineSliceAlong(f, doneKm, totalKm, { units: "kilometers" });
+        
+            } else {
+        
+              segPosato = turf.lineSliceAlong(f, totalKm - doneKm, totalKm, { units: "kilometers" });
+              segResiduo = turf.lineSliceAlong(f, 0, totalKm - doneKm, { units: "kilometers" });
+        
+            }
+        
+          } catch(e){}
+        
+          // 1️⃣ Residuo (ancora da fare) → linea piena
+          if (segResiduo) {
+            L.geoJSON(segResiduo, {
+              style: { color: col, weight: 5, opacity: 1 }
+            }).addTo(map);
+          }
+        
+          // 2️⃣ Posato → tratteggiato
+          if (segPosato) {
+            L.geoJSON(segPosato, {
+              style: { color: col, weight: 5, opacity: 1, dashArray: "10 8" }
+            }).addTo(map);
+          }
+        
+        }
 
       // 3) punto avanzamento (fine segmento)
       const res = progressPoint(f, done, tot);
