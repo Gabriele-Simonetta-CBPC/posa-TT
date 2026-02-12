@@ -35,7 +35,7 @@
     position:absolute;
     top:135px;
     right:14px;
-    width:min(640px, calc(100vw - 28px));
+    width:min(720px, calc(100vw - 28px));
     background:var(--panel);
     border:1px solid var(--border);
     border-radius:14px;
@@ -90,7 +90,7 @@
       <div class="meta">
         <span id="status" class="pill">caricamento…</span>
         <span id="updated" class="pill"></span>
-        <span class="pill">Dashboard pubblica</span>
+        <span id="baseline" class="pill"></span>
       </div>
     </div>
 
@@ -129,6 +129,7 @@
           <th>Tot (m)</th>
           <th>Posati (m)</th>
           <th>%</th>
+          <th>Δ% dal 27/01</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -153,17 +154,19 @@
   const CB = Date.now();
 
   // ===== DOM =====
-  const statusEl  = document.getElementById("status");
-  const updatedEl = document.getElementById("updated");
-  const tbody     = document.getElementById("tbody");
-  const overlay   = document.getElementById("overlay");
-  const toggleBtn = document.getElementById("toggle");
-  const filterTr  = document.getElementById("filterTronco");
-  const filterDi  = document.getElementById("filterDitta");
-  const resetBtn  = document.getElementById("resetFilters");
+  const statusEl   = document.getElementById("status");
+  const updatedEl  = document.getElementById("updated");
+  const baselineEl = document.getElementById("baseline");
+  const tbody      = document.getElementById("tbody");
+  const overlay    = document.getElementById("overlay");
+  const toggleBtn  = document.getElementById("toggle");
+  const filterTr   = document.getElementById("filterTronco");
+  const filterDi   = document.getElementById("filterDitta");
+  const resetBtn   = document.getElementById("resetFilters");
 
-  const setStatus = (t) => statusEl.textContent = t;
-  const setUpdated = (t) => updatedEl.textContent = t;
+  const setStatus   = (t) => statusEl.textContent = t;
+  const setUpdated  = (t) => updatedEl.textContent = t;
+  const setBaseline = (t) => baselineEl.textContent = t;
 
   // ===== Map + basemap switch =====
   const map = L.map("map");
@@ -199,7 +202,6 @@
     const i = TRONCHI_ORDER.indexOf(String(id));
     return i === -1 ? 999 : i;
   }
-
   function colorForTronco(id){
     const idx = Math.max(0, orderIndex(String(id)));
     return PALETTE[idx % PALETTE.length];
@@ -212,7 +214,6 @@
     if(!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
     return [lng, lat];
   }
-
   function sanitizeFeature(f){
     const g = f?.geometry;
     if(!g) return null;
@@ -230,7 +231,6 @@
       if(parts.length < 1) return null;
       return { ...f, geometry:{ type:"MultiLineString", coordinates: parts } };
     }
-
     return null;
   }
 
@@ -245,16 +245,16 @@
 
     try{
       const pt = turf.along(feature, distKm, {units:"kilometers"});
-      return { ok:true, perc, point: pt, totalKm };
+      return { ok:true, perc, point: pt };
     }catch(e){
       return { ok:false, perc };
     }
   }
 
-  // Segmenti: posato (tratteggio) e residuo (pieno)
+  // Segmenti: posato (tratteggio) e residuo (pieno) SENZA sovrapposizione
   function splitSegments(feature, done, tot){
     const totalKm = turf.length(feature, { units:"kilometers" });
-    if(!Number.isFinite(totalKm) || totalKm <= 0 || tot <= 0) return { segPosato:null, segResiduo:null, totalKm };
+    if(!Number.isFinite(totalKm) || totalKm <= 0 || tot <= 0) return { segPosato:null, segResiduo:null };
 
     const perc = Math.min(done / tot, 1);
     const doneKm = totalKm * perc;
@@ -262,19 +262,17 @@
     try{
       if(!REVERSE_PROGRESS){
         return {
-          totalKm,
-          segPosato: turf.lineSliceAlong(feature, 0, doneKm, { units:"kilometers" }),
+          segPosato:  turf.lineSliceAlong(feature, 0, doneKm, { units:"kilometers" }),
           segResiduo: turf.lineSliceAlong(feature, doneKm, totalKm, { units:"kilometers" })
         };
       }else{
         return {
-          totalKm,
-          segPosato: turf.lineSliceAlong(feature, Math.max(totalKm - doneKm, 0), totalKm, { units:"kilometers" }),
+          segPosato:  turf.lineSliceAlong(feature, Math.max(totalKm - doneKm, 0), totalKm, { units:"kilometers" }),
           segResiduo: turf.lineSliceAlong(feature, 0, Math.max(totalKm - doneKm, 0), { units:"kilometers" })
         };
       }
     }catch(e){
-      return { segPosato:null, segResiduo:null, totalKm };
+      return { segPosato:null, segResiduo:null };
     }
   }
 
@@ -288,10 +286,10 @@
   });
 
   // ===== State for filtering =====
-  // layersByTronco[id] = array of leaflet layers (residuo/posato/punto)
-  const layersByTronco = {};
-  // rowsData = [{id,ditta,tot,done,perc,col,feature}]
-  let rowsData = [];
+  const layersByTronco = {}; // id -> [layers...]
+  let rowsData = [];         // [{id,ditta,tot,done,perc,col,feature}]
+  let baseDate = "";
+  let baseMap = {};
 
   function clearLayers(){
     Object.values(layersByTronco).forEach(arr => arr.forEach(l => map.removeLayer(l)));
@@ -299,14 +297,12 @@
   }
 
   function buildFilters(){
-    // tronchi in ordine richiesto
     const ids = Array.from(new Set(rowsData.map(r => r.id)))
       .sort((a,b) => orderIndex(a) - orderIndex(b) || a.localeCompare(b));
 
     filterTr.innerHTML = `<option value="">Tutti i tronchi</option>` +
       ids.map(id => `<option value="${id}">${id}</option>`).join("");
 
-    // ditte in ordine alfabetico
     const ditte = Array.from(new Set(rowsData.map(r => r.ditta).filter(Boolean))).sort();
     filterDi.innerHTML = `<option value="">Tutte le ditte</option>` +
       ditte.map(d => `<option value="${d}">${d}</option>`).join("");
@@ -314,7 +310,12 @@
 
   function renderTable(filtered){
     tbody.innerHTML = "";
+
     filtered.forEach(r => {
+      const baseDone = Number(baseMap[r.id] ?? 0);
+      const deltaM = r.done - baseDone;
+      const deltaPerc = (r.tot > 0) ? (deltaM / r.tot) * 100 : 0;
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td><span class="swatch" style="background:${r.col}"></span>${r.id}</td>
@@ -325,6 +326,7 @@
           ${r.perc.toFixed(1)}%
           <div class="bar"><div style="width:${Math.min(r.perc,100).toFixed(1)}%"></div></div>
         </td>
+        <td>${deltaPerc.toFixed(1)}%</td>
       `;
       tbody.appendChild(tr);
     });
@@ -340,10 +342,10 @@
       return okT && okD;
     });
 
-    // Tabella
+    // tabella
     renderTable(filtered);
 
-    // Mappa: mostra solo i tronchi presenti nel filtered
+    // mappa: mostra solo tronchi filtrati
     const visibleIds = new Set(filtered.map(r => r.id));
     Object.entries(layersByTronco).forEach(([id, arr]) => {
       const show = visibleIds.has(id);
@@ -373,13 +375,17 @@
     fetch(FILE_AVANZ   + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("avanzamento.json HTTP " + r.status); return r.json(); })
   ])
   .then(([geo, avanz]) => {
+
     setStatus("dati caricati");
     setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON"));
 
-    // sanitize features
+    baseDate = avanz._baseline_date || "2026-01-27";
+    baseMap  = avanz._baseline_done || {};
+    setBaseline("baseline: " + baseDate);
+
     const cleanFeatures = (geo.features || []).map(sanitizeFeature).filter(Boolean);
 
-    // build dataset (una riga per feature)
+    // dataset (1 riga per feature/tronco)
     rowsData = [];
     cleanFeatures.forEach(f => {
       const id = getTroncoId(f.properties);
@@ -397,15 +403,15 @@
       rowsData.push({ id:String(id), ditta, tot, done, perc, col, feature:f });
     });
 
-    // sort (PV,1,2,3-1,3-2,4,5)
+    // sort PV,1,2,3-1,3-2,4,5
     rowsData.sort((a,b) => orderIndex(a.id) - orderIndex(b.id) || a.id.localeCompare(b.id));
 
-    // Fit bounds su tutte le geometrie (senza duplicare layer)
+    // Fit bounds su tutte le geometrie
     const tmp = L.geoJSON({type:"FeatureCollection", features: cleanFeatures}).addTo(map);
     if(cleanFeatures.length) map.fitBounds(tmp.getBounds());
     map.removeLayer(tmp);
 
-    // Disegna tutto una volta (poi filtri = hide/show)
+    // Disegno layer (una sola volta)
     clearLayers();
 
     rowsData.forEach(r => {
@@ -416,10 +422,9 @@
 
       layersByTronco[id] = layersByTronco[id] || [];
 
-      // segmenti
       const { segPosato, segResiduo } = splitSegments(f, r.done, r.tot);
 
-      // residuo pieno
+      // residuo pieno (da fare)
       if(segResiduo){
         const layerResiduo = L.geoJSON(segResiduo, {
           style: { color: col, weight: 5, opacity: 1 }
