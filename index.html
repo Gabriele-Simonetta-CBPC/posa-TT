@@ -82,7 +82,7 @@
     position: absolute;
     top: 135px;
     right: 14px;
-    width: min(520px, calc(100vw - 28px));
+    width: min(560px, calc(100vw - 28px));
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: 14px;
@@ -147,8 +147,19 @@
     margin-right:6px;
     vertical-align:middle;
   }
+  .bar{
+    height:8px;
+    background:#eee;
+    border-radius:999px;
+    overflow:hidden;
+    margin-top:4px;
+  }
+  .bar > div{
+    height:100%;
+    background:#444;
+    width:0%;
+  }
 
-  /* Mobile tweaks */
   @media (max-width: 720px){
     .logos img{ height:34px; }
     #map{ height: calc(100vh - 168px); }
@@ -162,7 +173,7 @@
   <div class="topline">
     <div class="title">
       <b>Schema irriguo Tidone – Avanzamento posa condotta</b>
-      Piano Nazionale di Ripresa e Resilienza (PNRR). Missione 2 - Componente 4 - Investimento 4.3 – Investimenti nella resilienza dell’agrosistema irriguo per una migliore gestione delle risorse idriche – finanziato dall’Unione Europea – Next Generation EU. Intervento: Schema irriguo Tidone: interventi di risparmio idrico per il contrasto alla siccità e adeguamenti funzionali del sistema adduzione in sponda sinistra e destra Tidone. Codice intervento: 08-05-5703-847. Decreto di concessione del contributo pubblico di finanziamento: Decreto MIPAAF–DISR 01 – Prot. 0484456 del 30/09/2022. Importo complessivo € 7.666.906,95. CUP G99J21006930005. :contentReference[oaicite:1]{index=1}
+      Piano Nazionale di Ripresa e Resilienza (PNRR). Missione 2 - Componente 4 - Investimento 4.3 - Investimenti nella resilienza dell'agrosistema irriguo per una migliore gestione delle risorse idriche - finanziato dall'Unione Europea - Next Generation EU. Intervento: Schema irriguo Tidone: interventi di risparmio idrico per il contrasto alla siccità e adeguamenti funzionali del sistema adduzione in sponda sinistra e destra Tidone: tronchi 1) Bruso - Rio; 2) da canale Tavernago - Tuna a lago delle Lische; 3) dal lago delle Lische a Tuna. Codice intervento: 08-05-5703-847. Decreto di concessione del contributo pubblico di finanziamento: Decreto del Ministero delle politiche agricole alimentari e forestali MIPAAF - DISR 01 - Prot. 0484456 del 30/09/2022. Importo complessivo € 7.666.906,95. CUP G99J21006930005.
       <div class="meta">
         <span id="status" class="pill">caricamento…</span>
         <span id="updated" class="pill"></span>
@@ -210,36 +221,54 @@
   const FILE_TRONCHI = "tronchi.geojson";
   const FILE_AVANZ   = "avanzamento.json";
 
-  // >>> QUI risolvi il tuo problema:
-  // se il 100% va "a sinistra", metti true
+  // Se il 100% va "nel verso sbagliato", lascia true (come avevi segnalato)
   const REVERSE_PROGRESS = true;
 
-  // Palette (colori diversi per tronco)
+  // Ordine cromatico stabile (stesso tronco = stesso colore)
+  const TRONCHI_ORDER = ["PV","1","2","3-1","3-2","4","5"];
   const PALETTE = ["#e41a1c","#377eb8","#4daf4a","#984ea3","#ff7f00","#a65628","#f781bf","#999999"];
+
+  // Anti-cache
+  const CB = Date.now();
 
   const statusEl  = document.getElementById("status");
   const updatedEl = document.getElementById("updated");
   const tbody     = document.getElementById("tbody");
 
-  const setStatus = (t) => statusEl.textContent = t;
+  const setStatus  = (t) => statusEl.textContent = t;
   const setUpdated = (t) => updatedEl.textContent = t;
 
+  // ====== Map + basemap switch ======
   const map = L.map('map');
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  });
 
-  // Anti-cache forte
-  const CB = Date.now();
+  const carto = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; OpenStreetMap contributors & CARTO'
+  });
 
-  // Helpers
+  const esriSat = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    { attribution: 'Tiles &copy; Esri' }
+  );
+
+  // default
+  carto.addTo(map);
+
+  L.control.layers(
+    { "Carto Light": carto, "OpenStreetMap": osm, "Satellitare (Esri)": esriSat },
+    {},
+    { collapsed: true }
+  ).addTo(map);
+
+  // ====== Helpers ======
   const getTroncoId = (p) => p?.tronco ?? p?.Tronco ?? p?.TRONCO ?? null;
   const getDitta    = (p) => p?.ditta ?? p?.Ditta ?? p?.DITTA ?? "";
 
   function colorForTronco(id){
-    // stabile: stesso tronco -> stesso colore
-    const keys = ["PV","1","2","3-1","3-2","4","5"];
-    const idx = Math.max(0, keys.indexOf(String(id)));
+    const idx = Math.max(0, TRONCHI_ORDER.indexOf(String(id)));
     return PALETTE[idx % PALETTE.length];
   }
 
@@ -273,15 +302,13 @@
     return null;
   }
 
+  // Punto avanzamento
   function progressPoint(feature, done, tot){
     const perc = (tot > 0) ? Math.min(done/tot, 1) : 0;
-
-    // lunghezza totale
     const totalKm = turf.length(feature, {units:"kilometers"});
     if(!Number.isFinite(totalKm) || totalKm <= 0) return { ok:false, perc, reason:"lunghezza 0" };
 
-    // distanza lungo linea:
-    // REVERSE_PROGRESS = true -> 100% va dall'altro lato (risolve il tuo caso)
+    // verso
     const eff = REVERSE_PROGRESS ? (1 - perc) : perc;
     const distKm = totalKm * eff;
 
@@ -290,6 +317,27 @@
       return { ok:true, perc, point: pt };
     }catch(e){
       return { ok:false, perc, reason: e?.message || String(e) };
+    }
+  }
+
+  // Segmento posato (tratteggiato)
+  function laidSegment(feature, done, tot){
+    if (tot <= 0) return null;
+
+    const perc = Math.min(done / tot, 1);
+    const totalKm = turf.length(feature, { units: "kilometers" });
+    if (!Number.isFinite(totalKm) || totalKm <= 0) return null;
+
+    const doneKm = totalKm * perc;
+
+    try{
+      if (!REVERSE_PROGRESS) {
+        return turf.lineSliceAlong(feature, 0, doneKm, { units: "kilometers" });
+      } else {
+        return turf.lineSliceAlong(feature, Math.max(totalKm - doneKm, 0), totalKm, { units: "kilometers" });
+      }
+    }catch(e){
+      return null;
     }
   }
 
@@ -304,6 +352,7 @@
     btn.textContent = hidden ? "Mostra" : "Nascondi";
   });
 
+  // ====== Load ======
   setStatus("caricamento…");
 
   Promise.all([
@@ -311,30 +360,21 @@
     fetch(FILE_AVANZ   + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("avanzamento.json HTTP " + r.status); return r.json(); })
   ])
   .then(([geo, avanz]) => {
+
     setStatus("dati caricati");
-    setUpdated("aggiornato: " + new Date().toLocaleString("it-IT"));
+    setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON"));
 
     const cleanFeatures = (geo.features||[]).map(sanitizeFeature).filter(Boolean);
     const cleanFC = { type:"FeatureCollection", features: cleanFeatures };
 
-    // Disegna linee colorate per tronco
-    const layerLines = L.geoJSON(cleanFC, {
-      style: (f) => {
-        const id = getTroncoId(f.properties);
-        return { color: colorForTronco(id), weight: 4, opacity: 0.9 };
-      },
-      onEachFeature: (f, layer) => {
-        const id = getTroncoId(f.properties) ?? "?";
-        const ditta = getDitta(f.properties);
-        layer.bindTooltip(`Tronco ${id}${ditta ? " - " + ditta : ""}`);
-      }
-    }).addTo(map);
+    // Fit bounds su tutte le geometrie (senza disegnare linee doppie)
+    const tmp = L.geoJSON(cleanFC).addTo(map);
+    if (cleanFeatures.length) map.fitBounds(tmp.getBounds());
+    map.removeLayer(tmp);
 
-    if(cleanFeatures.length) map.fitBounds(layerLines.getBounds());
-
-    // Popola tabella + punti
     tbody.innerHTML = "";
 
+    // Disegno per feature: linea base + tratteggio posato + punto avanzamento
     cleanFeatures.forEach(f => {
       const id = getTroncoId(f.properties);
       if(!id) return;
@@ -349,18 +389,34 @@
 
       const col = colorForTronco(id);
 
-      // riga tabella
+      // Tabella
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td><span class="swatch" style="background:${col}"></span>${id}</td>
         <td>${ditta || ""}</td>
         <td>${fmt(tot)}</td>
         <td>${fmt(done)}</td>
-        <td>${perc.toFixed(1)}%</td>
+        <td>
+          ${perc.toFixed(1)}%
+          <div class="bar"><div style="width:${Math.min(perc,100).toFixed(1)}%"></div></div>
+        </td>
       `;
       tbody.appendChild(tr);
 
-      // punto avanzamento
+      // 1) linea base intera (leggera)
+      L.geoJSON(f, {
+        style: { color: col, weight: 4, opacity: 0.30 }
+      }).addTo(map);
+
+      // 2) segmento posato (tratteggiato)
+      const seg = laidSegment(f, done, tot);
+      if (seg) {
+        L.geoJSON(seg, {
+          style: { color: col, weight: 5, opacity: 0.95, dashArray: "10 8" }
+        }).addTo(map);
+      }
+
+      // 3) punto avanzamento (fine segmento)
       const res = progressPoint(f, done, tot);
       if(!res.ok || !res.point) return;
 
@@ -378,6 +434,7 @@
         ${(res.perc*100).toFixed(1)} %
       `);
     });
+
   })
   .catch(err => {
     console.error(err);
