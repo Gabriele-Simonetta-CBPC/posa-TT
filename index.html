@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Avanzamento posa condotta</title>
 
-<!-- evita favicon 404 -->
 <link rel="icon" href="data:,">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -13,194 +12,108 @@
 <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 
 <style>
-  body { font-family: Arial, sans-serif; margin: 0; }
-  header { padding: 12px 16px; border-bottom: 1px solid #ddd; display:flex; gap:12px; align-items:center; }
-  #map { height: calc(100vh - 54px); }
-  .badge { font-size: 12px; background:#f2f2f2; border:1px solid #ddd; padding:4px 8px; border-radius: 999px; }
+body { margin:0; font-family:Arial, sans-serif; }
+header { padding:10px 15px; border-bottom:1px solid #ccc; }
+#map { height:calc(100vh - 50px); }
 </style>
 </head>
 
 <body>
+
 <header>
   <b>Avanzamento posa condotta</b>
-  <span id="status" class="badge">caricamento…</span>
+  <span id="status">caricamento…</span>
 </header>
+
 <div id="map"></div>
 
 <script>
-(() => {
-  // ==== CONFIG ====
-  // File nella root del repo GitHub Pages
-  const FILE_TRONCHI = "tronchi.geojson";
-  const FILE_AVANZ   = "avanzamento.json";
 
-  // Anti-cache (GitHub Pages + browser)
-  const CB = Date.now();
+const statusEl = document.getElementById("status");
+function setStatus(t){ statusEl.textContent = t; }
 
-  // Base path robusto anche se index.html non è in root
-  const BASE = window.location.origin + window.location.pathname.replace(/index\.html$/,"");
+console.log("BOOT OK");
 
-  // ==== MAP ====
-  const map = L.map('map');
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap contributors'
+const map = L.map('map').setView([44.99, 9.51], 13);
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors'
+}).addTo(map);
+
+const CB = Date.now(); // anti cache
+
+console.log("Fetch files...");
+
+Promise.all([
+  fetch("tronchi.geojson?cb=" + CB).then(r=>{
+    console.log("tronchi status:", r.status);
+    if(!r.ok) throw new Error("tronchi.geojson HTTP "+r.status);
+    return r.json();
+  }),
+  fetch("avanzamento.json?cb=" + CB).then(r=>{
+    console.log("avanzamento status:", r.status);
+    if(!r.ok) throw new Error("avanzamento.json HTTP "+r.status);
+    return r.json();
+  })
+])
+.then(([geo, avanz])=>{
+
+  console.log("GeoJSON features:", geo.features.length);
+  console.log("Avanz keys:", Object.keys(avanz));
+
+  setStatus("dati caricati");
+
+  const layer = L.geoJSON(geo, {
+    style: { color:"#555", weight:4 }
   }).addTo(map);
 
-  const statusEl = document.getElementById("status");
-  const setStatus = (txt) => statusEl.textContent = txt;
+  map.fitBounds(layer.getBounds());
 
-  // ==== HELPERS ====
-  const isFiniteNum = (v) => (typeof v === "number" && Number.isFinite(v));
+  geo.features.forEach(f=>{
 
-  function getTroncoId(props) {
-    return props?.tronco ?? props?.Tronco ?? props?.TRONCO ?? null;
-  }
-  function getDitta(props) {
-    return props?.ditta ?? props?.Ditta ?? props?.DITTA ?? "";
-  }
+    const id = f.properties?.tronco;
+    if(!id) return;
 
-  // Converte qualsiasi valore (numero o stringa numerica) in Number e valida
-  function toValidPoint(pt) {
-    if (!Array.isArray(pt) || pt.length < 2) return null;
-    const lng = Number(pt[0]);
-    const lat = Number(pt[1]);
-    if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
-    return [lng, lat];
-  }
+    const dati = avanz[id];
+    if(!dati) return;
 
-  // Sanitizza LineString/MultiLineString: converte a numeri e rimuove punti invalidi
-  function sanitizeFeature(feature) {
-    const g = feature?.geometry;
-    if (!g || !g.type) return { ok: false, reason: "geometry assente" };
+    const done = Number(dati.done)||0;
+    const tot  = Number(dati.tot)||0;
+    if(tot<=0) return;
 
-    if (g.type === "LineString") {
-      const clean = (g.coordinates || []).map(toValidPoint).filter(Boolean);
-      if (clean.length < 2) return { ok: false, reason: "LineString con < 2 punti validi" };
-      return {
-        ok: true,
-        feature: { ...feature, geometry: { type: "LineString", coordinates: clean } }
-      };
+    try{
+
+      const lengthKm = turf.length(f, {units:"kilometers"});
+      const distKm = lengthKm * Math.min(done/tot,1);
+      const pt = turf.along(f, distKm, {units:"kilometers"});
+
+      const [lng,lat] = pt.geometry.coordinates;
+
+      L.circleMarker([lat,lng],{
+        radius:7,
+        color:"red",
+        fillColor:"red",
+        fillOpacity:1
+      }).addTo(map).bindPopup(
+        "<b>Tronco "+id+"</b><br>"+
+        done.toFixed(2)+" / "+tot.toFixed(2)+" m<br>"+
+        ((done/tot)*100).toFixed(1)+" %"
+      );
+
+    }catch(e){
+      console.error("Errore su tronco", id, e);
     }
 
-    if (g.type === "MultiLineString") {
-      const parts = (g.coordinates || [])
-        .map(line => (line || []).map(toValidPoint).filter(Boolean))
-        .filter(line => line.length >= 2);
+  });
 
-      if (parts.length < 1) return { ok: false, reason: "MultiLineString senza parti valide" };
-      return {
-        ok: true,
-        feature: { ...feature, geometry: { type: "MultiLineString", coordinates: parts } }
-      };
-    }
+})
+.catch(err=>{
+  console.error("ERRORE GENERALE:", err);
+  setStatus("errore caricamento");
+  alert(err.message);
+});
 
-    return { ok: false, reason: `tipo ${g.type} non supportato` };
-  }
+</script>
 
-  // Calcola punto di avanzamento (turf.length + turf.along) in modo safe
-  function progressPoint(feature, done, tot) {
-    const perc = (tot > 0) ? Math.min(done / tot, 1) : 0;
-    const totalKm = turf.length(feature, { units: "kilometers" });
-    if (!Number.isFinite(totalKm) || totalKm <= 0) return { ok:false, perc, reason:"lunghezza 0" };
-
-    const distKm = totalKm * perc;
-    try {
-      const pt = turf.along(feature, distKm, { units: "kilometers" });
-      return { ok:true, perc, point: pt };
-    } catch (e) {
-      return { ok:false, perc, reason: e?.message || String(e) };
-    }
-  }
-
-  function formatMeters(n) {
-    return (Number(n) || 0).toFixed(2);
-  }
-
-  // ==== LOAD DATA ====
-  Promise.all([
-    fetch(`${BASE}${FILE_TRONCHI}?cb=${CB}`).then(r => {
-      if(!r.ok) throw new Error(`Errore ${r.status} su ${FILE_TRONCHI}`);
-      return r.json();
-    }),
-    fetch(`${BASE}${FILE_AVANZ}?cb=${CB}`).then(r => {
-      if(!r.ok) throw new Error(`Errore ${r.status} su ${FILE_AVANZ}`);
-      return r.json();
-    })
-  ])
-  .then(([fc, avanz]) => {
-    setStatus("dati caricati");
-
-    // Sanitizzazione
-    const clean = [];
-    const skipped = [];
-
-    (fc.features || []).forEach((f) => {
-      const id = getTroncoId(f.properties);
-      const res = sanitizeFeature(f);
-      if (!res.ok) {
-        skipped.push({ id, reason: res.reason });
-        console.warn("Feature scartata:", id, res.reason, f);
-        return;
-      }
-      clean.push(res.feature);
-    });
-
-    const cleanFC = { type: "FeatureCollection", features: clean };
-
-    // Disegna linee
-    const layerLines = L.geoJSON(cleanFC, {
-      style: { color: "#666", weight: 4 },
-      onEachFeature: (f, layer) => {
-        const id = getTroncoId(f.properties) ?? "?";
-        const ditta = getDitta(f.properties);
-        layer.bindTooltip(`Tronco ${id}${ditta ? " - " + ditta : ""}`);
-      }
-    }).addTo(map);
-
-    if (clean.length) map.fitBounds(layerLines.getBounds());
-    else map.setView([44.99, 9.51], 13);
-
-    // Disegna punti avanzamento (1 punto per feature)
-    let okPoints = 0;
-    let badPoints = 0;
-
-    clean.forEach((f) => {
-      const id = getTroncoId(f.properties);
-      if (!id) return;
-
-      const dati = avanz[id];
-      if (!dati) {
-        console.warn("Manca avanzamento per tronco:", id);
-        return;
-      }
-
-      const done = Number(dati.done) || 0;
-      const tot  = Number(dati.tot)  || 0;
-
-      const ditta = getDitta(f.properties);
-      const res = progressPoint(f, done, tot);
-
-      if (!res.ok || !res.point) {
-        badPoints++;
-        console.warn("Errore punto tronco:", id, res.reason);
-        // marker arancione sul primo punto della geometria per evidenziare problema
-        const g = f.geometry;
-        let first = null;
-        if (g.type === "LineString") first = g.coordinates[0];
-        if (g.type === "MultiLineString") first = g.coordinates[0]?.[0];
-        if (first) {
-          L.circleMarker([first[1], first[0]], {
-            radius: 6, color: "orange", fillColor: "orange", fillOpacity: 1
-          }).addTo(map).bindPopup(`
-            <b>Tronco ${id}</b><br>
-            ${ditta ? `<i>${ditta}</i><br>` : ""}
-            <span style="color:#b45f06">Errore geometria: ${res.reason}</span>
-          `);
-        }
-        return;
-      }
-
-      const [lng, lat] = res.point.geometry.coordinates;
-
-      L.circleMarker([lat, lng], {
-        radius: 7, color: "red", fillColor
+</body>
+</html>
