@@ -1,332 +1,169 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Avanzamento posa condotta – PNRR</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avanzamento posa condotta – PNRR</title>
 
-  <link rel="icon" href="data:,">
+<link rel="icon" href="data:,">
 
-  <!-- Librerie esterne -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
 
-  <style>
-    /* ==========================================================
-       1) TEMA E LAYOUT GENERALE
-       ========================================================== */
-    :root {
-      --bg: #ffffff;
-      --fg: #111;
-      --muted: #666;
-      --panel: #fff;
-      --border: #ddd;
-      --shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
-    }
+<style>
+  :root{
+    --bg:#ffffff;
+    --fg:#111;
+    --muted:#666;
+    --panel:#fff;
+    --border:#ddd;
+    --shadow: 0 8px 28px rgba(0,0,0,.12);
+  }
+  body{ margin:0; font-family: Arial, sans-serif; color:var(--fg); background:var(--bg); }
+  header{ padding:10px 14px; border-bottom:1px solid var(--border); background:#fff; }
+  .topline{ display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
+  .title{ max-width: 1200px; line-height: 1.25; font-size: 14px; }
+  .title b{ font-size: 16px; display:block; margin-bottom:4px; }
+  .meta{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:6px; color:var(--muted); font-size:12px; }
+  .pill{ border:1px solid var(--border); border-radius:999px; padding:4px 10px; background:#f7f7f7; }
+  .logos{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .logos img{ height:42px; width:auto; object-fit:contain; border:1px solid #eee; border-radius:10px; padding:6px 8px; background:#fff; }
+  #map{ height: calc(100vh - 122px); }
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      color: var(--fg);
-      background: var(--bg);
-    }
+  /* Overlay */
+  .overlay{
+    position:absolute;
+    top:135px;
+    right:14px;
+    width:min(760px, calc(100vw - 28px));
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+    z-index:999;
+  }
+  .overlay-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:10px 12px;
+    border-bottom:1px solid var(--border);
+    background:#fafafa;
+    flex-wrap:wrap;
+  }
+  .overlay-header .h{ font-weight:700; font-size:13px; }
+  .overlay-header .controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+  .overlay-header select, .overlay-header button{
+    border:1px solid var(--border);
+    background:#fff;
+    border-radius:10px;
+    padding:6px 10px;
+    font-size:12px;
+    cursor:pointer;
+  }
 
-    header {
-      padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
-      background: #fff;
-    }
+  .overlay-body{ max-height:55vh; overflow:auto; background:#fff; }
 
-    .topline {
-      display: flex;
-      gap: 12px;
-      align-items: flex-start;
-      justify-content: space-between;
-      flex-wrap: wrap;
-    }
+  /* Totals row */
+  #totalsRow{
+    padding:10px 12px;
+    border-bottom:1px solid #eee;
+    font-size:12px;
+    background:#fff;
+    position:sticky;
+    top:0;
+    z-index:3;
+  }
+  #totalsRow b{ font-weight:700; }
 
-    .title {
-      max-width: 1200px;
-      line-height: 1.25;
-      font-size: 14px;
-    }
+  /* Table */
+  table{ width:100%; border-collapse:collapse; font-size:12px; }
+  th, td{ padding:8px 8px; border-bottom:1px solid #eee; text-align:right; white-space:nowrap; }
+  th{ position:sticky; top:44px; background:#fff; z-index:2; border-bottom:1px solid var(--border); }
+  td:first-child, th:first-child, td:nth-child(2), th:nth-child(2){ text-align:left; }
+  .swatch{ display:inline-block; width:10px; height:10px; border-radius:999px; margin-right:6px; vertical-align:middle; }
+  .bar{ height:8px; background:#eee; border-radius:999px; overflow:hidden; margin-top:4px; }
+  .bar > div{ height:100%; background:#444; width:0%; }
 
-    .title b {
-      font-size: 16px;
-      display: block;
-      margin-bottom: 4px;
-    }
+  /* Compact mode: show only totals row */
+  .overlay.compact .overlay-body table{ display:none; }
+  .overlay.compact .overlay-body{ max-height:none; }
 
-    .meta {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-top: 6px;
-      color: var(--muted);
-      font-size: 12px;
-    }
+  /* Basemap bar */
+  .basebar{
+    display:flex;
+    gap:0;
+    border:1px solid #d9d9d9;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow: 0 6px 16px rgba(0,0,0,.08);
+    background:#fff;
+  }
+  .basebar button{
+    appearance:none;
+    border:0;
+    background:#fff;
+    padding:6px 10px;
+    font-size:12px;
+    line-height:1;
+    cursor:pointer;
+    color:#222;
+    border-right:1px solid #e6e6e6;
+  }
+  .basebar button:last-child{ border-right:0; }
+  .basebar button:hover{ background:#f5f5f5; }
+  .basebar button.active{ background:#111; color:#fff; }
 
-    .pill {
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: 4px 10px;
-      background: #f7f7f7;
-    }
-
-    .logos {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .logos img {
-      height: 42px;
-      width: auto;
-      object-fit: contain;
-      border: 1px solid #eee;
-      border-radius: 10px;
-      padding: 6px 8px;
-      background: #fff;
-    }
-
-    #map {
-      height: calc(100vh - 122px);
-    }
-
-    /* ==========================================================
-       2) PANNELLO OVERLAY (tabella + filtri)
-       ========================================================== */
-    .overlay {
-      position: absolute;
-      top: 135px;
-      right: 14px;
-      width: min(760px, calc(100vw - 28px));
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      box-shadow: var(--shadow);
-      overflow: hidden;
-      z-index: 999;
-    }
-
-    .overlay-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--border);
-      background: #fafafa;
-      flex-wrap: wrap;
-    }
-
-    .overlay-header .h {
-      font-weight: 700;
-      font-size: 13px;
-    }
-
-    .overlay-header .controls {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .overlay-header select,
-    .overlay-header button {
-      border: 1px solid var(--border);
-      background: #fff;
-      border-radius: 10px;
-      padding: 6px 10px;
-      font-size: 12px;
-      cursor: pointer;
-    }
-
-    .overlay-body {
-      max-height: 55vh;
-      overflow: auto;
-      background: #fff;
-    }
-
-    #totalsRow {
-      padding: 10px 12px;
-      border-bottom: 1px solid #eee;
-      font-size: 12px;
-      background: #fff;
-      position: sticky;
-      top: 0;
-      z-index: 3;
-    }
-
-    #totalsRow b {
-      font-weight: 700;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 12px;
-    }
-
-    th,
-    td {
-      padding: 8px 8px;
-      border-bottom: 1px solid #eee;
-      text-align: right;
-      white-space: nowrap;
-    }
-
-    th {
-      position: sticky;
-      top: 44px;
-      background: #fff;
-      z-index: 2;
-      border-bottom: 1px solid var(--border);
-    }
-
-    td:first-child,
-    th:first-child,
-    td:nth-child(2),
-    th:nth-child(2) {
-      text-align: left;
-    }
-
-    .swatch {
-      display: inline-block;
-      width: 10px;
-      height: 10px;
-      border-radius: 999px;
-      margin-right: 6px;
-      vertical-align: middle;
-    }
-
-    .bar {
-      height: 8px;
-      background: #eee;
-      border-radius: 999px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
-
-    .bar > div {
-      height: 100%;
-      background: #444;
-      width: 0%;
-    }
-
-    /* In modalità compatta mostriamo solo i totali, senza tabella. */
-    .overlay.compact .overlay-body table {
-      display: none;
-    }
-
-    .overlay.compact .overlay-body {
-      max-height: none;
-    }
-
-    /* ==========================================================
-       3) BARRA CAMBIO BASEMAP
-       ========================================================== */
-    .basebar {
-      display: flex;
-      gap: 0;
-      border: 1px solid #d9d9d9;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-      background: #fff;
-    }
-
-    .basebar button {
-      appearance: none;
-      border: 0;
-      background: #fff;
-      padding: 6px 10px;
-      font-size: 12px;
-      line-height: 1;
-      cursor: pointer;
-      color: #222;
-      border-right: 1px solid #e6e6e6;
-    }
-
-    .basebar button:last-child {
-      border-right: 0;
-    }
-
-    .basebar button:hover {
-      background: #f5f5f5;
-    }
-
-    .basebar button.active {
-      background: #111;
-      color: #fff;
-    }
-
-    /* Responsive mobile */
-    @media (max-width: 720px) {
-      .logos img {
-        height: 34px;
-      }
-
-      #map {
-        height: calc(100vh - 168px);
-      }
-
-      .overlay {
-        top: 182px;
-        left: 14px;
-        right: 14px;
-        width: auto;
-      }
-    }
-  </style>
+  @media (max-width:720px){
+    .logos img{ height:34px; }
+    #map{ height: calc(100vh - 168px); }
+    .overlay{ top:182px; left:14px; right:14px; width:auto; }
+  }
+</style>
 </head>
 
 <body>
-  <header>
-    <div class="topline">
-      <div class="title">
-        <b>Schema irriguo Tidone – Avanzamento posa condotta</b>
-        Piano Nazionale di Ripresa e Resilienza (PNRR). Missione 2 - Componente 4 - Investimento 4.3 - Investimenti nella resilienza dell'agrosistema irriguo per una migliore gestione delle risorse idriche - finanziato dall'Unione Europea - Next Generation EU. Intervento: Schema irriguo Tidone: interventi di risparmio idrico per il contrasto alla siccità e adeguamenti funzionali del sistema adduzione in sponda sinistra e destra Tidone: tronchi 1) Bruso - Rio; 2) da canale Tavernago - Tuna a lago delle Lische; 3) dal lago delle Lische a Tuna. Codice intervento: 08-05-5703-847. Decreto di concessione del contributo pubblico di finanziamento: Decreto MIPAAF - DISR 01 - Prot. 0484456 del 30/09/2022. Importo complessivo € 7.666.906,95. CUP G99J21006930005.
-        <div class="meta">
-          <span id="status" class="pill">caricamento…</span>
-          <span id="updated" class="pill"></span>
-          <span id="baseline" class="pill"></span>
-        </div>
-      </div>
-
-      <div class="logos">
-        <!-- Loghi istituzionali (facoltativi). -->
-        <img src="assets/italiadomani.png" alt="Italia Domani">
-        <img src="assets/masaf.png" alt="MASAF">
-        <img src="assets/nextgenerationeu.png" alt="NextGenerationEU">
-        <img src="assets/consorzio.png" alt="Consorzio">
+<header>
+  <div class="topline">
+    <div class="title">
+      <b>Schema irriguo Tidone – Avanzamento posa condotta</b>
+      Piano Nazionale di Ripresa e Resilienza (PNRR). Missione 2 - Componente 4 - Investimento 4.3 - Investimenti nella resilienza dell'agrosistema irriguo per una migliore gestione delle risorse idriche - finanziato dall'Unione Europea - Next Generation EU. Intervento: Schema irriguo Tidone: interventi di risparmio idrico per il contrasto alla siccità e adeguamenti funzionali del sistema adduzione in sponda sinistra e destra Tidone: tronchi 1) Bruso - Rio; 2) da canale Tavernago - Tuna a lago delle Lische; 3) dal lago delle Lische a Tuna. Codice intervento: 08-05-5703-847. Decreto di concessione del contributo pubblico di finanziamento: Decreto MIPAAF - DISR 01 - Prot. 0484456 del 30/09/2022. Importo complessivo € 7.666.906,95. CUP G99J21006930005.
+      <div class="meta">
+        <span id="status" class="pill">caricamento…</span>
+        <span id="updated" class="pill"></span>
+        <span id="baseline" class="pill"></span>
       </div>
     </div>
-  </header>
 
-  <!-- Contenitore mappa Leaflet -->
-  <div id="map"></div>
-
-  <!-- Overlay con filtri, riepilogo e tabella -->
-  <div class="overlay" id="overlay">
-    <div class="overlay-header">
-      <div class="h">Avanzamento per tronco</div>
-      <div class="controls">
-        <select id="filterTronco">
-          <option value="">Tutti i tronchi</option>
-        </select>
-        <select id="filterDitta">
-          <option value="">Tutte le ditte</option>
-        </select>
-        <button id="resetFilters">Reset</button>
-        <button id="toggle">Comprimi</button>
-      </div>
+    <div class="logos">
+      <!-- opzionale: se non hai loghi, commenta queste 4 righe -->
+      <img src="assets/italiadomani.png" alt="Italia Domani">
+      <img src="assets/masaf.png" alt="MASAF">
+      <img src="assets/nextgenerationeu.png" alt="NextGenerationEU">
+      <img src="assets/consorzio.png" alt="Consorzio">
     </div>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<div class="overlay" id="overlay">
+  <div class="overlay-header">
+    <div class="h">Avanzamento per tronco</div>
+    <div class="controls">
+      <select id="filterTronco">
+        <option value="">Tutti i tronchi</option>
+      </select>
+      <select id="filterDitta">
+        <option value="">Tutte le ditte</option>
+      </select>
+      <button id="resetFilters">Reset</button>
+      <button id="toggle">Comprimi</button>
+    </div>
+  </div>
 
   <div class="overlay-body">
     <div id="totalsRow">Totali: —</div>
@@ -339,7 +176,6 @@
           <th>Tot (m)</th>
           <th>Posati (m)</th>
           <th>%</th>
-          <th>m dal 27/01</th>
           <th>Δ% dal 27/01</th>
         </tr>
       </thead>
@@ -351,9 +187,8 @@
 <script>
 (() => {
   // ===== Config =====
-  const REPO_BASE = location.hostname.endsWith("github.io") ? "/posa-TT/" : "/";
-  const FILE_TRONCHI = new URL("tronchi.geojson", location.origin + REPO_BASE).toString();
-  const FILE_AVANZ   = new URL("avanzamento.json", location.origin + REPO_BASE).toString();
+  const FILE_TRONCHI = "tronchi.geojson";
+  const FILE_AVANZ   = "avanzamento.json";
 
   // Se il 100% ti va nel verso sbagliato, lascia true
   const REVERSE_PROGRESS = true;
@@ -435,128 +270,84 @@
   });
   map.addControl(new BaseBar());
 
-  <script>
-    (() => {
-      "use strict";
+  // ===== Helpers =====
+  const getTroncoId = (p) => p?.tronco ?? p?.Tronco ?? p?.TRONCO ?? null;
+  const getDitta    = (p) => p?.ditta ?? p?.Ditta ?? p?.DITTA ?? "";
 
-      /* ========================================================
-         A) CONFIGURAZIONE
-         ======================================================== */
-      const FILE_TRONCHI = "tronchi.geojson";
-      const FILE_AVANZ = "avanzamento.json";
+  const fmt = (n) => (Number(n) || 0).toFixed(2);
 
-      // Se i tronchi sono disegnati con verso opposto alla progressiva reale,
-      // lasciare true per invertire il lato di avanzamento.
-      const REVERSE_PROGRESS = true;
+  function orderIndex(id){
+    const i = TRONCHI_ORDER.indexOf(String(id));
+    return i === -1 ? 999 : i;
+  }
+  function colorForTronco(id){
+    const idx = Math.max(0, orderIndex(String(id)));
+    return PALETTE[idx % PALETTE.length];
+  }
 
-      // Ordine visualizzazione tronchi e palette colori associata.
-      const TRONCHI_ORDER = ["PV", "1", "2", "3-1", "3-2", "4", "5"];
-      const PALETTE = ["#e41a1c", "#377eb8", "#4daf4a", "#984ea3", "#ff7f00", "#a65628", "#f781bf", "#999999"];
+  // sanitize coordinate to numbers (evita turf crash)
+  function toValidPoint(pt){
+    if(!Array.isArray(pt) || pt.length < 2) return null;
+    const lng = Number(pt[0]), lat = Number(pt[1]);
+    if(!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
+    return [lng, lat];
+  }
+  function sanitizeFeature(f){
+    const g = f?.geometry;
+    if(!g) return null;
 
-      // Cache buster per forzare refresh file locali.
-      const CB = Date.now();
+    if(g.type === "LineString"){
+      const clean = (g.coordinates||[]).map(toValidPoint).filter(Boolean);
+      if(clean.length < 2) return null;
+      return { ...f, geometry:{ type:"LineString", coordinates: clean } };
+    }
 
-      /* ========================================================
-         B) RIFERIMENTI DOM
-         ======================================================== */
-      const statusEl = document.getElementById("status");
-      const updatedEl = document.getElementById("updated");
-      const baselineEl = document.getElementById("baseline");
-      const totalsEl = document.getElementById("totalsRow");
+    if(g.type === "MultiLineString"){
+      const parts = (g.coordinates||[])
+        .map(line => (line||[]).map(toValidPoint).filter(Boolean))
+        .filter(line => line.length >= 2);
+      if(parts.length < 1) return null;
+      return { ...f, geometry:{ type:"MultiLineString", coordinates: parts } };
+    }
+    return null;
+  }
 
-      const tbody = document.getElementById("tbody");
-      const overlay = document.getElementById("overlay");
-      const toggleBtn = document.getElementById("toggle");
-      const filterTr = document.getElementById("filterTronco");
-      const filterDi = document.getElementById("filterDitta");
-      const resetBtn = document.getElementById("resetFilters");
+  // Punto avanzamento
+  function progressPoint(feature, done, tot){
+    const perc = (tot > 0) ? Math.min(done/tot, 1) : 0;
+    const totalKm = turf.length(feature, {units:"kilometers"});
+    if(!Number.isFinite(totalKm) || totalKm <= 0) return { ok:false, perc };
 
-      const setStatus = (text) => { statusEl.textContent = text; };
-      const setUpdated = (text) => { updatedEl.textContent = text; };
-      const setBaseline = (text) => { baselineEl.textContent = text; };
+    const eff = REVERSE_PROGRESS ? (1 - perc) : perc;
+    const distKm = totalKm * eff;
 
-      /* ========================================================
-         C) INIZIALIZZAZIONE MAPPA
-         ======================================================== */
-      const map = L.map("map");
+    try{
+      const pt = turf.along(feature, distKm, {units:"kilometers"});
+      return { ok:true, perc, point: pt };
+    }catch(e){
+      return { ok:false, perc };
+    }
+  }
 
-      const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap contributors"
-      });
+  // Segmenti: posato (tratteggio) e residuo (pieno) SENZA sovrapposizione
+  function splitSegments(feature, done, tot){
+    const totalKm = turf.length(feature, { units:"kilometers" });
+    if(!Number.isFinite(totalKm) || totalKm <= 0 || tot <= 0) return { segPosato:null, segResiduo:null };
 
-      const carto = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: "&copy; OpenStreetMap contributors & CARTO"
-      });
+    const perc = Math.min(done / tot, 1);
+    const doneKm = totalKm * perc;
 
-      const esriSat = L.tileLayer(
-        "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        { attribution: "Tiles &copy; Esri" }
-      );
-
-      // Basemap di default all'avvio.
-      carto.addTo(map);
-
-      // Controllo custom compatto per cambiare basemap.
-      const BaseBar = L.Control.extend({
-        options: { position: "topleft" },
-        onAdd() {
-          const div = L.DomUtil.create("div", "basebar leaflet-bar");
-          div.innerHTML = `
-            <button type="button" data-base="carto" class="active" title="Carto Light">Carto</button>
-            <button type="button" data-base="osm" title="OpenStreetMap">OSM</button>
-            <button type="button" data-base="sat" title="Satellitare">Sat</button>
-          `;
-
-          L.DomEvent.disableClickPropagation(div);
-          L.DomEvent.disableScrollPropagation(div);
-
-          const setActive = (key) => {
-            div.querySelectorAll("button").forEach((button) => {
-              button.classList.toggle("active", button.dataset.base === key);
-            });
-          };
-
-          const setBase = (key) => {
-            [carto, osm, esriSat].forEach((layer) => map.removeLayer(layer));
-
-            if (key === "osm") {
-              osm.addTo(map);
-            } else if (key === "sat") {
-              esriSat.addTo(map);
-            } else {
-              carto.addTo(map);
-            }
-
-            setActive(key);
-          };
-
-          div.addEventListener("click", (event) => {
-            const button = event.target.closest("button[data-base]");
-            if (!button) return;
-            setBase(button.dataset.base);
-          });
-
-          return div;
-        }
-      });
-
-      map.addControl(new BaseBar());
-
-      /* ========================================================
-         D) FUNZIONI HELPER (parsing, formattazione, geometrie)
-         ======================================================== */
-      const getTroncoId = (properties) => properties?.tronco ?? properties?.Tronco ?? properties?.TRONCO ?? null;
-      const getDitta = (properties) => properties?.ditta ?? properties?.Ditta ?? properties?.DITTA ?? "";
-      const fmt = (value) => (Number(value) || 0).toFixed(2);
-
-      function orderIndex(id) {
-        const index = TRONCHI_ORDER.indexOf(String(id));
-        return index === -1 ? 999 : index;
-      }
-
-      function colorForTronco(id) {
-        const index = Math.max(0, orderIndex(String(id)));
-        return PALETTE[index % PALETTE.length];
+    try{
+      if(!REVERSE_PROGRESS){
+        return {
+          segPosato:  turf.lineSliceAlong(feature, 0, doneKm, { units:"kilometers" }),
+          segResiduo: turf.lineSliceAlong(feature, doneKm, totalKm, { units:"kilometers" })
+        };
+      }else{
+        return {
+          segPosato:  turf.lineSliceAlong(feature, Math.max(totalKm - doneKm, 0), totalKm, { units:"kilometers" }),
+          segResiduo: turf.lineSliceAlong(feature, 0, Math.max(totalKm - doneKm, 0), { units:"kilometers" })
+        };
       }
     }catch(e){
       return { segPosato:null, segResiduo:null };
@@ -570,12 +361,6 @@
   let baseMap = {};
   let compact = false;
 
-  function updateCompactLayout(){
-    overlay.classList.toggle("compact", compact);
-    toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
-    totalsEl.style.display = compact ? "block" : "none";
-  }
-
   function clearLayers(){
     Object.values(layersByTronco).forEach(arr => arr.forEach(l => map.removeLayer(l)));
     Object.keys(layersByTronco).forEach(k => delete layersByTronco[k]);
@@ -584,7 +369,8 @@
   // ===== UI: Compress / Expand =====
   toggleBtn.addEventListener("click", () => {
     compact = !compact;
-    updateCompactLayout();
+    overlay.classList.toggle("compact", compact);
+    toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
   });
 
   // ===== Filters =====
@@ -618,7 +404,6 @@
           ${r.perc.toFixed(1)}%
           <div class="bar"><div style="width:${Math.min(r.perc,100).toFixed(1)}%"></div></div>
         </td>
-        <td>${fmt(deltaM)}</td>
         <td>${deltaPerc.toFixed(1)}%</td>
       `;
       tbody.appendChild(tr);
@@ -647,7 +432,6 @@
       Tot: <b>${fmt(totSum)}</b> m ·
       Posati: <b>${fmt(doneSum)}</b> m ·
       %: <b>${percTot.toFixed(1)}%</b> ·
-      m dal ${baseDate}: <b>${fmt(deltaSum)}</b> ·
       Δ% dal ${baseDate}: <b>${deltaPercTot.toFixed(1)}%</b>
     `;
   }
@@ -676,180 +460,108 @@
         }else{
           if(map.hasLayer(layer)) map.removeLayer(layer);
         }
-
-        return null;
-      }
-
-      // Calcola punto avanzamento lungo il tronco da usare come marker.
-      function progressPoint(feature, done, total) {
-        const progressRatio = total > 0 ? Math.min(done / total, 1) : 0;
-        const totalKm = turf.length(feature, { units: "kilometers" });
-        if (!Number.isFinite(totalKm) || totalKm <= 0) {
-          return { ok: false, perc: progressRatio };
-        }
-
-        const effectiveRatio = REVERSE_PROGRESS ? (1 - progressRatio) : progressRatio;
-        const distanceKm = totalKm * effectiveRatio;
-
-        try {
-          const point = turf.along(feature, distanceKm, { units: "kilometers" });
-          return { ok: true, perc: progressRatio, point };
-        } catch {
-          return { ok: false, perc: progressRatio };
-        }
-      }
-
-      // Divide la geometria in due porzioni:
-      // - segPosato  -> parte realizzata (tratteggiata)
-      // - segResiduo -> parte da fare (linea piena)
-      function splitSegments(feature, done, total) {
-        const totalKm = turf.length(feature, { units: "kilometers" });
-        if (!Number.isFinite(totalKm) || totalKm <= 0 || total <= 0) {
-          return { segPosato: null, segResiduo: null };
-        }
-
-        const progressRatio = Math.min(done / total, 1);
-        const doneKm = totalKm * progressRatio;
-
-        try {
-          if (!REVERSE_PROGRESS) {
-            return {
-              segPosato: turf.lineSliceAlong(feature, 0, doneKm, { units: "kilometers" }),
-              segResiduo: turf.lineSliceAlong(feature, doneKm, totalKm, { units: "kilometers" })
-            };
-          }
-
-          return {
-            segPosato: turf.lineSliceAlong(feature, Math.max(totalKm - doneKm, 0), totalKm, { units: "kilometers" }),
-            segResiduo: turf.lineSliceAlong(feature, 0, Math.max(totalKm - doneKm, 0), { units: "kilometers" })
-          };
-        } catch {
-          return { segPosato: null, segResiduo: null };
-        }
-      }
-
-      /* ========================================================
-         E) STATO APPLICAZIONE
-         ======================================================== */
-      const layersByTronco = {}; // { troncoId: [leafletLayer, ...] }
-      let rowsData = [];         // [{ id, ditta, tot, done, perc, col, feature }, ...]
-      let baseDate = "";
-      let baseMap = {};
-      let compact = false;
-
-      function clearLayers() {
-        Object.values(layersByTronco).forEach((layers) => {
-          layers.forEach((layer) => map.removeLayer(layer));
-        });
-
-        Object.keys(layersByTronco).forEach((key) => delete layersByTronco[key]);
-      }
-
-      /* ========================================================
-         F) UI: COMPATTA / ESPANDI
-         ======================================================== */
-      toggleBtn.addEventListener("click", () => {
-        compact = !compact;
-        overlay.classList.toggle("compact", compact);
-        toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
       });
+    });
+  }
 
-      /* ========================================================
-         G) UI: FILTRI E RENDER TABELLA/TOTALI
-         ======================================================== */
-      function buildFilters() {
-        const tronchi = Array.from(new Set(rowsData.map((row) => row.id)))
-          .sort((a, b) => orderIndex(a) - orderIndex(b) || a.localeCompare(b));
+  filterTr.addEventListener("change", applyFilters);
+  filterDi.addEventListener("change", applyFilters);
+  resetBtn.addEventListener("click", () => {
+    filterTr.value = "";
+    filterDi.value = "";
+    applyFilters();
+  });
 
-        filterTr.innerHTML =
-          `<option value="">Tutti i tronchi</option>` +
-          tronchi.map((id) => `<option value="${id}">${id}</option>`).join("");
+  // ===== Load =====
+  setStatus("caricamento…");
 
-        const ditte = Array.from(new Set(rowsData.map((row) => row.ditta).filter(Boolean))).sort();
-        filterDi.innerHTML =
-          `<option value="">Tutte le ditte</option>` +
-          ditte.map((name) => `<option value="${name}">${name}</option>`).join("");
+  Promise.all([
+    fetch(FILE_TRONCHI + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("tronchi.geojson HTTP " + r.status); return r.json(); }),
+    fetch(FILE_AVANZ   + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("avanzamento.json HTTP " + r.status); return r.json(); })
+  ])
+  .then(([geo, avanz]) => {
+
+    setStatus("dati caricati");
+    setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON"));
+
+    baseDate = avanz._baseline_date || "2026-01-27";
+    baseMap  = avanz._baseline_done || {};
+    setBaseline("baseline: " + baseDate);
+
+    const cleanFeatures = (geo.features || []).map(sanitizeFeature).filter(Boolean);
+
+    // dataset
+    rowsData = [];
+    cleanFeatures.forEach(f => {
+      const id = getTroncoId(f.properties);
+      if(!id) return;
+
+      const dati = avanz[String(id)];
+      if(!dati) return;
+
+      const ditta = getDitta(f.properties);
+      const tot = Number(dati.tot) || 0;
+      const done = Number(dati.done) || 0;
+      const perc = tot > 0 ? (done/tot)*100 : 0;
+      const col = colorForTronco(id);
+
+      rowsData.push({ id:String(id), ditta, tot, done, perc, col, feature:f });
+    });
+
+    // sort PV,1,2,3-1,3-2,4,5
+    rowsData.sort((a,b) => orderIndex(a.id) - orderIndex(b.id) || a.id.localeCompare(b.id));
+
+    // fit bounds
+    const tmp = L.geoJSON({type:"FeatureCollection", features: cleanFeatures}).addTo(map);
+    if(cleanFeatures.length) map.fitBounds(tmp.getBounds());
+    map.removeLayer(tmp);
+
+    // draw layers once
+    clearLayers();
+
+    rowsData.forEach(r => {
+      const id = r.id;
+      const f = r.feature;
+      const col = r.col;
+      const ditta = r.ditta;
+
+      layersByTronco[id] = layersByTronco[id] || [];
+
+      const { segPosato, segResiduo } = splitSegments(f, r.done, r.tot);
+
+      // residuo pieno (da fare)
+      if(segResiduo){
+        const layerResiduo = L.geoJSON(segResiduo, {
+          style: { color: col, weight: 5, opacity: 1 }
+        }).addTo(map);
+        layersByTronco[id].push(layerResiduo);
       }
 
-      function renderTable(filteredRows) {
-        tbody.innerHTML = "";
-
-        filteredRows.forEach((row) => {
-          const baseDone = Number(baseMap[row.id] ?? 0);
-          const deltaMeters = row.done - baseDone;
-          const deltaPercent = row.tot > 0 ? (deltaMeters / row.tot) * 100 : 0;
-
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td><span class="swatch" style="background:${row.col}"></span>${row.id}</td>
-            <td>${row.ditta || ""}</td>
-            <td>${fmt(row.tot)}</td>
-            <td>${fmt(row.done)}</td>
-            <td>
-              ${row.perc.toFixed(1)}%
-              <div class="bar"><div style="width:${Math.min(row.perc, 100).toFixed(1)}%"></div></div>
-            </td>
-            <td>${deltaPercent.toFixed(1)}%</td>
-          `;
-
-          tbody.appendChild(tr);
-        });
+      // posato tratteggiato
+      if(segPosato){
+        const layerPosato = L.geoJSON(segPosato, {
+          style: { color: col, weight: 5, opacity: 1, dashArray: "10 8" }
+        }).addTo(map);
+        layersByTronco[id].push(layerPosato);
       }
 
-      function renderTotals(filteredRows) {
-        const tronchiCount = new Set(filteredRows.map((row) => row.id)).size;
-        const ditteCount = new Set(filteredRows.map((row) => row.ditta).filter(Boolean)).size;
-
-        const totalMeters = filteredRows.reduce((sum, row) => sum + (Number(row.tot) || 0), 0);
-        const doneMeters = filteredRows.reduce((sum, row) => sum + (Number(row.done) || 0), 0);
-
-        const deltaMeters = filteredRows.reduce((sum, row) => {
-          const baseDone = Number(baseMap[row.id] ?? 0);
-          return sum + ((Number(row.done) || 0) - baseDone);
-        }, 0);
-
-        const totalPercent = totalMeters > 0 ? (doneMeters / totalMeters) * 100 : 0;
-        const deltaPercent = totalMeters > 0 ? (deltaMeters / totalMeters) * 100 : 0;
-
-        totalsEl.innerHTML = `
-          <b>Tutti i tronchi</b> ·
-          Tronchi: <b>${tronchiCount}</b> ·
-          Ditte: <b>${ditteCount}</b> ·
-          Tot: <b>${fmt(totalMeters)}</b> m ·
-          Posati: <b>${fmt(doneMeters)}</b> m ·
-          %: <b>${totalPercent.toFixed(1)}%</b> ·
-          Δ% dal ${baseDate}: <b>${deltaPercent.toFixed(1)}%</b>
-        `;
-      }
-
-      function applyFilters() {
-        const selectedTronco = filterTr.value;
-        const selectedDitta = filterDi.value;
-
-        const filteredRows = rowsData.filter((row) => {
-          const troncoMatch = !selectedTronco || row.id === selectedTronco;
-          const dittaMatch = !selectedDitta || row.ditta === selectedDitta;
-          return troncoMatch && dittaMatch;
-        });
-
-        // Aggiorna pannello dati.
-        renderTotals(filteredRows);
-        renderTable(filteredRows);
-
-        // Aggiorna layer visibili in mappa.
-        const visibleIds = new Set(filteredRows.map((row) => row.id));
-        Object.entries(layersByTronco).forEach(([troncoId, layers]) => {
-          const shouldShow = visibleIds.has(troncoId);
-          layers.forEach((layer) => {
-            if (shouldShow && !map.hasLayer(layer)) layer.addTo(map);
-            if (!shouldShow && map.hasLayer(layer)) map.removeLayer(layer);
-          });
-        });
+      // punto avanzamento
+      const res = progressPoint(f, r.done, r.tot);
+      if(res.ok && res.point){
+        const [lng, lat] = res.point.geometry.coordinates;
+        const p = L.circleMarker([lat, lng], {
+          radius: 7, color: col, fillColor: col, fillOpacity: 1
+        }).bindPopup(`
+          <b>Tronco ${id}</b><br>
+          ${ditta ? `<i>${ditta}</i><br>` : ""}
+          ${fmt(r.done)} / ${fmt(r.tot)} m<br>
+          ${(Math.min(r.done / (r.tot||1), 1)*100).toFixed(1)} %
+        `).addTo(map);
+        layersByTronco[id].push(p);
       }
     });
 
     // filters + first render
-    updateCompactLayout();
     buildFilters();
     applyFilters();
   })
