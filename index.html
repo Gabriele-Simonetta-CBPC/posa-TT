@@ -31,11 +31,12 @@
   .logos img{ height:42px; width:auto; object-fit:contain; border:1px solid #eee; border-radius:10px; padding:6px 8px; background:#fff; }
   #map{ height: calc(100vh - 122px); }
 
+  /* Overlay */
   .overlay{
     position:absolute;
     top:135px;
     right:14px;
-    width:min(720px, calc(100vw - 28px));
+    width:min(760px, calc(100vw - 28px));
     background:var(--panel);
     border:1px solid var(--border);
     border-radius:14px;
@@ -63,15 +64,58 @@
     font-size:12px;
     cursor:pointer;
   }
-  .overlay-body{ max-height:55vh; overflow:auto; }
 
+  .overlay-body{ max-height:55vh; overflow:auto; background:#fff; }
+
+  /* Totals row */
+  #totalsRow{
+    padding:10px 12px;
+    border-bottom:1px solid #eee;
+    font-size:12px;
+    background:#fff;
+    position:sticky;
+    top:0;
+    z-index:3;
+  }
+  #totalsRow b{ font-weight:700; }
+
+  /* Table */
   table{ width:100%; border-collapse:collapse; font-size:12px; }
   th, td{ padding:8px 8px; border-bottom:1px solid #eee; text-align:right; white-space:nowrap; }
-  th{ position:sticky; top:0; background:#fff; z-index:2; border-bottom:1px solid var(--border); }
+  th{ position:sticky; top:44px; background:#fff; z-index:2; border-bottom:1px solid var(--border); }
   td:first-child, th:first-child, td:nth-child(2), th:nth-child(2){ text-align:left; }
   .swatch{ display:inline-block; width:10px; height:10px; border-radius:999px; margin-right:6px; vertical-align:middle; }
   .bar{ height:8px; background:#eee; border-radius:999px; overflow:hidden; margin-top:4px; }
   .bar > div{ height:100%; background:#444; width:0%; }
+
+  /* Compact mode: show only totals row */
+  .overlay.compact .overlay-body table{ display:none; }
+  .overlay.compact .overlay-body{ max-height:none; }
+
+  /* Basemap bar */
+  .basebar{
+    display:flex;
+    gap:0;
+    border:1px solid #d9d9d9;
+    border-radius:12px;
+    overflow:hidden;
+    box-shadow: 0 6px 16px rgba(0,0,0,.08);
+    background:#fff;
+  }
+  .basebar button{
+    appearance:none;
+    border:0;
+    background:#fff;
+    padding:6px 10px;
+    font-size:12px;
+    line-height:1;
+    cursor:pointer;
+    color:#222;
+    border-right:1px solid #e6e6e6;
+  }
+  .basebar button:last-child{ border-right:0; }
+  .basebar button:hover{ background:#f5f5f5; }
+  .basebar button.active{ background:#111; color:#fff; }
 
   @media (max-width:720px){
     .logos img{ height:34px; }
@@ -95,7 +139,7 @@
     </div>
 
     <div class="logos">
-      <!-- opzionale: se non hai loghi, puoi commentare queste 4 righe -->
+      <!-- opzionale: se non hai loghi, commenta queste 4 righe -->
       <img src="assets/italiadomani.png" alt="Italia Domani">
       <img src="assets/masaf.png" alt="MASAF">
       <img src="assets/nextgenerationeu.png" alt="NextGenerationEU">
@@ -117,10 +161,13 @@
         <option value="">Tutte le ditte</option>
       </select>
       <button id="resetFilters">Reset</button>
-      <button id="toggle">Nascondi</button>
+      <button id="toggle">Comprimi</button>
     </div>
   </div>
+
   <div class="overlay-body">
+    <div id="totalsRow">Totali: —</div>
+
     <table>
       <thead>
         <tr>
@@ -157,6 +204,8 @@
   const statusEl   = document.getElementById("status");
   const updatedEl  = document.getElementById("updated");
   const baselineEl = document.getElementById("baseline");
+  const totalsEl   = document.getElementById("totalsRow");
+
   const tbody      = document.getElementById("tbody");
   const overlay    = document.getElementById("overlay");
   const toggleBtn  = document.getElementById("toggle");
@@ -168,29 +217,58 @@
   const setUpdated  = (t) => updatedEl.textContent = t;
   const setBaseline = (t) => baselineEl.textContent = t;
 
-  // ===== Map + basemap switch =====
+  // ===== Map =====
   const map = L.map("map");
 
   const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap contributors"
   });
-
   const carto = L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
     attribution: "&copy; OpenStreetMap contributors & CARTO"
   });
-
   const esriSat = L.tileLayer(
     "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
     { attribution: "Tiles &copy; Esri" }
   );
 
+  // default
   carto.addTo(map);
 
-  L.control.layers(
-    { "Carto Light": carto, "OpenStreetMap": osm, "Satellitare (Esri)": esriSat },
-    {},
-    { collapsed: true, position: "topleft" }
-  ).addTo(map);
+  // --- Basemap bar (compatta, una riga) ---
+  const BaseBar = L.Control.extend({
+    options: { position: "topleft" },
+    onAdd: function() {
+      const div = L.DomUtil.create("div", "basebar leaflet-bar");
+      div.innerHTML = `
+        <button type="button" data-base="carto" class="active" title="Carto Light">Carto</button>
+        <button type="button" data-base="osm" title="OpenStreetMap">OSM</button>
+        <button type="button" data-base="sat" title="Satellitare">Sat</button>
+      `;
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+
+      const setActive = (key) => {
+        div.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.base === key));
+      };
+
+      const setBase = (key) => {
+        [carto, osm, esriSat].forEach(l => map.removeLayer(l));
+        if (key === "osm") osm.addTo(map);
+        else if (key === "sat") esriSat.addTo(map);
+        else carto.addTo(map);
+        setActive(key);
+      };
+
+      div.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-base]");
+        if (!btn) return;
+        setBase(btn.dataset.base);
+      });
+
+      return div;
+    }
+  });
+  map.addControl(new BaseBar());
 
   // ===== Helpers =====
   const getTroncoId = (p) => p?.tronco ?? p?.Tronco ?? p?.TRONCO ?? null;
@@ -276,26 +354,26 @@
     }
   }
 
-  // ===== Overlay toggle =====
-  let hidden = false;
-  toggleBtn.addEventListener("click", () => {
-    hidden = !hidden;
-    overlay.style.height = hidden ? "44px" : "";
-    overlay.querySelector(".overlay-body").style.display = hidden ? "none" : "block";
-    toggleBtn.textContent = hidden ? "Mostra" : "Nascondi";
-  });
-
-  // ===== State for filtering =====
+  // ===== State =====
   const layersByTronco = {}; // id -> [layers...]
   let rowsData = [];         // [{id,ditta,tot,done,perc,col,feature}]
   let baseDate = "";
   let baseMap = {};
+  let compact = false;
 
   function clearLayers(){
     Object.values(layersByTronco).forEach(arr => arr.forEach(l => map.removeLayer(l)));
     Object.keys(layersByTronco).forEach(k => delete layersByTronco[k]);
   }
 
+  // ===== UI: Compress / Expand =====
+  toggleBtn.addEventListener("click", () => {
+    compact = !compact;
+    overlay.classList.toggle("compact", compact);
+    toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
+  });
+
+  // ===== Filters =====
   function buildFilters(){
     const ids = Array.from(new Set(rowsData.map(r => r.id)))
       .sort((a,b) => orderIndex(a) - orderIndex(b) || a.localeCompare(b));
@@ -332,6 +410,32 @@
     });
   }
 
+  function renderTotals(filtered){
+    const tronchiCount = new Set(filtered.map(r => r.id)).size;
+    const ditteCount = new Set(filtered.map(r => r.ditta).filter(Boolean)).size;
+
+    const totSum  = filtered.reduce((s,r) => s + (Number(r.tot)||0), 0);
+    const doneSum = filtered.reduce((s,r) => s + (Number(r.done)||0), 0);
+
+    const deltaSum = filtered.reduce((s,r) => {
+      const baseDone = Number(baseMap[r.id] ?? 0);
+      return s + ((Number(r.done)||0) - baseDone);
+    }, 0);
+
+    const percTot = totSum > 0 ? (doneSum / totSum) * 100 : 0;
+    const deltaPercTot = totSum > 0 ? (deltaSum / totSum) * 100 : 0;
+
+    totalsEl.innerHTML = `
+      <b>Tutti i tronchi</b> ·
+      Tronchi: <b>${tronchiCount}</b> ·
+      Ditte: <b>${ditteCount}</b> ·
+      Tot: <b>${fmt(totSum)}</b> m ·
+      Posati: <b>${fmt(doneSum)}</b> m ·
+      %: <b>${percTot.toFixed(1)}%</b> ·
+      Δ% dal ${baseDate}: <b>${deltaPercTot.toFixed(1)}%</b>
+    `;
+  }
+
   function applyFilters(){
     const t = filterTr.value;
     const d = filterDi.value;
@@ -342,10 +446,11 @@
       return okT && okD;
     });
 
-    // tabella
+    // Totali + tabella
+    renderTotals(filtered);
     renderTable(filtered);
 
-    // mappa: mostra solo tronchi filtrati
+    // Mappa: mostra solo tronchi filtrati
     const visibleIds = new Set(filtered.map(r => r.id));
     Object.entries(layersByTronco).forEach(([id, arr]) => {
       const show = visibleIds.has(id);
@@ -385,7 +490,7 @@
 
     const cleanFeatures = (geo.features || []).map(sanitizeFeature).filter(Boolean);
 
-    // dataset (1 riga per feature/tronco)
+    // dataset
     rowsData = [];
     cleanFeatures.forEach(f => {
       const id = getTroncoId(f.properties);
@@ -406,12 +511,12 @@
     // sort PV,1,2,3-1,3-2,4,5
     rowsData.sort((a,b) => orderIndex(a.id) - orderIndex(b.id) || a.id.localeCompare(b.id));
 
-    // Fit bounds su tutte le geometrie
+    // fit bounds
     const tmp = L.geoJSON({type:"FeatureCollection", features: cleanFeatures}).addTo(map);
     if(cleanFeatures.length) map.fitBounds(tmp.getBounds());
     map.removeLayer(tmp);
 
-    // Disegno layer (una sola volta)
+    // draw layers once
     clearLayers();
 
     rowsData.forEach(r => {
@@ -428,8 +533,7 @@
       if(segResiduo){
         const layerResiduo = L.geoJSON(segResiduo, {
           style: { color: col, weight: 5, opacity: 1 }
-        });
-        layerResiduo.addTo(map);
+        }).addTo(map);
         layersByTronco[id].push(layerResiduo);
       }
 
@@ -437,8 +541,7 @@
       if(segPosato){
         const layerPosato = L.geoJSON(segPosato, {
           style: { color: col, weight: 5, opacity: 1, dashArray: "10 8" }
-        });
-        layerPosato.addTo(map);
+        }).addTo(map);
         layersByTronco[id].push(layerPosato);
       }
 
@@ -453,13 +556,12 @@
           ${ditta ? `<i>${ditta}</i><br>` : ""}
           ${fmt(r.done)} / ${fmt(r.tot)} m<br>
           ${(Math.min(r.done / (r.tot||1), 1)*100).toFixed(1)} %
-        `);
-        p.addTo(map);
+        `).addTo(map);
         layersByTronco[id].push(p);
       }
     });
 
-    // filtri + prima render
+    // filters + first render
     buildFilters();
     applyFilters();
   })
