@@ -76,6 +76,7 @@
     position:sticky;
     top:0;
     z-index:3;
+    display:none;
   }
   #totalsRow b{ font-weight:700; }
 
@@ -116,6 +117,33 @@
   .basebar button:last-child{ border-right:0; }
   .basebar button:hover{ background:#f5f5f5; }
   .basebar button.active{ background:#111; color:#fff; }
+
+  .map-control-label{
+    font-size:12px;
+    font-weight:700;
+    color:#111;
+    margin:0 0 6px;
+    background:#fff;
+    border:1px solid #d9d9d9;
+    border-radius:8px;
+    padding:4px 8px;
+    box-shadow:0 4px 12px rgba(0,0,0,.08);
+    display:inline-block;
+  }
+
+  .line-legend{
+    background:#fff;
+    border:1px solid #d9d9d9;
+    border-radius:10px;
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+    padding:8px 10px;
+    font-size:12px;
+    color:#111;
+    line-height:1.4;
+  }
+  .line-legend .item{ display:flex; align-items:center; gap:8px; margin:2px 0; }
+  .line-legend .sample{ width:28px; height:0; border-top:3px solid #333; }
+  .line-legend .sample.dashed{ border-top-style:dashed; }
 
   @media (max-width:720px){
     .logos img{ height:34px; }
@@ -176,6 +204,7 @@
           <th>Tot (m)</th>
           <th>Posati (m)</th>
           <th>%</th>
+          <th>m dal 27/01</th>
           <th>Δ% dal 27/01</th>
         </tr>
       </thead>
@@ -187,8 +216,9 @@
 <script>
 (() => {
   // ===== Config =====
-  const FILE_TRONCHI = "tronchi.geojson";
-  const FILE_AVANZ   = "avanzamento.json";
+  const REPO_BASE = location.hostname.endsWith("github.io") ? "/posa-TT/" : "/";
+  const FILE_TRONCHI = new URL("tronchi.geojson", location.origin + REPO_BASE).toString();
+  const FILE_AVANZ   = new URL("avanzamento.json", location.origin + REPO_BASE).toString();
 
   // Se il 100% ti va nel verso sbagliato, lascia true
   const REVERSE_PROGRESS = true;
@@ -238,7 +268,9 @@
   const BaseBar = L.Control.extend({
     options: { position: "topleft" },
     onAdd: function() {
-      const div = L.DomUtil.create("div", "basebar leaflet-bar");
+      const wrap = L.DomUtil.create("div", "");
+      wrap.innerHTML = `<div class="map-control-label">Tipologia mappa</div>`;
+      const div = L.DomUtil.create("div", "basebar leaflet-bar", wrap);
       div.innerHTML = `
         <button type="button" data-base="carto" class="active" title="Carto Light">Carto</button>
         <button type="button" data-base="osm" title="OpenStreetMap">OSM</button>
@@ -246,6 +278,8 @@
       `;
       L.DomEvent.disableClickPropagation(div);
       L.DomEvent.disableScrollPropagation(div);
+      L.DomEvent.disableClickPropagation(wrap);
+      L.DomEvent.disableScrollPropagation(wrap);
 
       const setActive = (key) => {
         div.querySelectorAll("button").forEach(b => b.classList.toggle("active", b.dataset.base === key));
@@ -265,10 +299,25 @@
         setBase(btn.dataset.base);
       });
 
-      return div;
+      return wrap;
     }
   });
   map.addControl(new BaseBar());
+
+  const LineLegend = L.Control.extend({
+    options: { position: "bottomleft" },
+    onAdd: function(){
+      const div = L.DomUtil.create("div", "line-legend");
+      div.innerHTML = `
+        <div class="item"><span class="sample dashed"></span><span>Tratto tratteggio: posato</span></div>
+        <div class="item"><span class="sample"></span><span>Tratto pieno: da fare</span></div>
+      `;
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      return div;
+    }
+  });
+  map.addControl(new LineLegend());
 
   // ===== Helpers =====
   const getTroncoId = (p) => p?.tronco ?? p?.Tronco ?? p?.TRONCO ?? null;
@@ -337,6 +386,10 @@
     const perc = Math.min(done / tot, 1);
     const doneKm = totalKm * perc;
 
+    if(perc >= 1){
+      return { segPosato: feature, segResiduo: null };
+    }
+
     try{
       if(!REVERSE_PROGRESS){
         return {
@@ -361,6 +414,12 @@
   let baseMap = {};
   let compact = false;
 
+  function updateCompactLayout(){
+    overlay.classList.toggle("compact", compact);
+    toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
+    totalsEl.style.display = compact ? "block" : "none";
+  }
+
   function clearLayers(){
     Object.values(layersByTronco).forEach(arr => arr.forEach(l => map.removeLayer(l)));
     Object.keys(layersByTronco).forEach(k => delete layersByTronco[k]);
@@ -369,8 +428,7 @@
   // ===== UI: Compress / Expand =====
   toggleBtn.addEventListener("click", () => {
     compact = !compact;
-    overlay.classList.toggle("compact", compact);
-    toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
+    updateCompactLayout();
   });
 
   // ===== Filters =====
@@ -404,6 +462,7 @@
           ${r.perc.toFixed(1)}%
           <div class="bar"><div style="width:${Math.min(r.perc,100).toFixed(1)}%"></div></div>
         </td>
+        <td>${fmt(deltaM)}</td>
         <td>${deltaPerc.toFixed(1)}%</td>
       `;
       tbody.appendChild(tr);
@@ -432,6 +491,7 @@
       Tot: <b>${fmt(totSum)}</b> m ·
       Posati: <b>${fmt(doneSum)}</b> m ·
       %: <b>${percTot.toFixed(1)}%</b> ·
+      m dal ${baseDate}: <b>${fmt(deltaSum)}</b> ·
       Δ% dal ${baseDate}: <b>${deltaPercTot.toFixed(1)}%</b>
     `;
   }
@@ -562,6 +622,7 @@
     });
 
     // filters + first render
+    updateCompactLayout();
     buildFilters();
     applyFilters();
   })
