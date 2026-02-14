@@ -176,6 +176,7 @@
           <th>Tot (m)</th>
           <th>Posati (m)</th>
           <th>%</th>
+          <th>m dal 27/01</th>
           <th>Δ% dal 27/01</th>
         </tr>
       </thead>
@@ -187,8 +188,9 @@
 <script>
 (() => {
   // ===== Config =====
-  const FILE_TRONCHI = "tronchi.geojson";
-  const FILE_AVANZ   = "avanzamento.json";
+  const REPO_BASE = location.hostname.endsWith("github.io") ? "/posa-TT/" : "/";
+  const FILE_TRONCHI = new URL("tronchi.geojson", location.origin + REPO_BASE).toString();
+  const FILE_AVANZ   = new URL("avanzamento.json", location.origin + REPO_BASE).toString();
 
   // Se il 100% ti va nel verso sbagliato, lascia true
   const REVERSE_PROGRESS = true;
@@ -361,6 +363,12 @@
   let baseMap = {};
   let compact = false;
 
+  function updateCompactLayout(){
+    overlay.classList.toggle("compact", compact);
+    toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
+    totalsEl.style.display = compact ? "block" : "none";
+  }
+
   function clearLayers(){
     Object.values(layersByTronco).forEach(arr => arr.forEach(l => map.removeLayer(l)));
     Object.keys(layersByTronco).forEach(k => delete layersByTronco[k]);
@@ -369,8 +377,7 @@
   // ===== UI: Compress / Expand =====
   toggleBtn.addEventListener("click", () => {
     compact = !compact;
-    overlay.classList.toggle("compact", compact);
-    toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
+    updateCompactLayout();
   });
 
   // ===== Filters =====
@@ -404,6 +411,7 @@
           ${r.perc.toFixed(1)}%
           <div class="bar"><div style="width:${Math.min(r.perc,100).toFixed(1)}%"></div></div>
         </td>
+        <td>${fmt(deltaM)}</td>
         <td>${deltaPerc.toFixed(1)}%</td>
       `;
       tbody.appendChild(tr);
@@ -432,6 +440,7 @@
       Tot: <b>${fmt(totSum)}</b> m ·
       Posati: <b>${fmt(doneSum)}</b> m ·
       %: <b>${percTot.toFixed(1)}%</b> ·
+      m dal ${baseDate}: <b>${fmt(deltaSum)}</b> ·
       Δ% dal ${baseDate}: <b>${deltaPercTot.toFixed(1)}%</b>
     `;
   }
@@ -562,6 +571,7 @@
     });
 
     // filters + first render
+    updateCompactLayout();
     buildFilters();
     applyFilters();
   })
