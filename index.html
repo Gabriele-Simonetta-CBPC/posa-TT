@@ -328,23 +328,23 @@
       </div>
     </div>
 
-    <div class="overlay-body">
-      <div id="totalsRow">Totali: —</div>
+  <div class="overlay-body">
+    <div id="totalsRow">Totali: —</div>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Tronco</th>
-            <th>Ditta</th>
-            <th>Tot (m)</th>
-            <th>Posati (m)</th>
-            <th>%</th>
-            <th>Δ% dal 27/01</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Tronco</th>
+          <th>Ditta</th>
+          <th>Tot (m)</th>
+          <th>Posati (m)</th>
+          <th>%</th>
+          <th>m dal 27/01</th>
+          <th>Δ% dal 27/01</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
 
   <script>
@@ -470,41 +470,123 @@
         const index = Math.max(0, orderIndex(String(id)));
         return PALETTE[index % PALETTE.length];
       }
+    }catch(e){
+      return { segPosato:null, segResiduo:null };
+    }
+  }
 
-      // Converte coordinate in numeri finiti per evitare errori nelle funzioni Turf.
-      function toValidPoint(point) {
-        if (!Array.isArray(point) || point.length < 2) return null;
-        const lng = Number(point[0]);
-        const lat = Number(point[1]);
-        if (!Number.isFinite(lng) || !Number.isFinite(lat)) return null;
-        return [lng, lat];
-      }
+  // ===== State =====
+  const layersByTronco = {}; // id -> [layers...]
+  let rowsData = [];         // [{id,ditta,tot,done,perc,col,feature}]
+  let baseDate = "";
+  let baseMap = {};
+  let compact = false;
 
-      // Pulisce feature LineString/MultiLineString mantenendo solo coordinate valide.
-      function sanitizeFeature(feature) {
-        const geometry = feature?.geometry;
-        if (!geometry) return null;
+  function updateCompactLayout(){
+    overlay.classList.toggle("compact", compact);
+    toggleBtn.textContent = compact ? "Espandi" : "Comprimi";
+    totalsEl.style.display = compact ? "block" : "none";
+  }
 
-        if (geometry.type === "LineString") {
-          const cleanCoordinates = (geometry.coordinates || []).map(toValidPoint).filter(Boolean);
-          if (cleanCoordinates.length < 2) return null;
-          return {
-            ...feature,
-            geometry: { type: "LineString", coordinates: cleanCoordinates }
-          };
-        }
+  function clearLayers(){
+    Object.values(layersByTronco).forEach(arr => arr.forEach(l => map.removeLayer(l)));
+    Object.keys(layersByTronco).forEach(k => delete layersByTronco[k]);
+  }
 
-        if (geometry.type === "MultiLineString") {
-          const cleanParts = (geometry.coordinates || [])
-            .map((line) => (line || []).map(toValidPoint).filter(Boolean))
-            .filter((line) => line.length >= 2);
+  // ===== UI: Compress / Expand =====
+  toggleBtn.addEventListener("click", () => {
+    compact = !compact;
+    updateCompactLayout();
+  });
 
-          if (cleanParts.length < 1) return null;
+  // ===== Filters =====
+  function buildFilters(){
+    const ids = Array.from(new Set(rowsData.map(r => r.id)))
+      .sort((a,b) => orderIndex(a) - orderIndex(b) || a.localeCompare(b));
 
-          return {
-            ...feature,
-            geometry: { type: "MultiLineString", coordinates: cleanParts }
-          };
+    filterTr.innerHTML = `<option value="">Tutti i tronchi</option>` +
+      ids.map(id => `<option value="${id}">${id}</option>`).join("");
+
+    const ditte = Array.from(new Set(rowsData.map(r => r.ditta).filter(Boolean))).sort();
+    filterDi.innerHTML = `<option value="">Tutte le ditte</option>` +
+      ditte.map(d => `<option value="${d}">${d}</option>`).join("");
+  }
+
+  function renderTable(filtered){
+    tbody.innerHTML = "";
+
+    filtered.forEach(r => {
+      const baseDone = Number(baseMap[r.id] ?? 0);
+      const deltaM = r.done - baseDone;
+      const deltaPerc = (r.tot > 0) ? (deltaM / r.tot) * 100 : 0;
+
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><span class="swatch" style="background:${r.col}"></span>${r.id}</td>
+        <td>${r.ditta || ""}</td>
+        <td>${fmt(r.tot)}</td>
+        <td>${fmt(r.done)}</td>
+        <td>
+          ${r.perc.toFixed(1)}%
+          <div class="bar"><div style="width:${Math.min(r.perc,100).toFixed(1)}%"></div></div>
+        </td>
+        <td>${fmt(deltaM)}</td>
+        <td>${deltaPerc.toFixed(1)}%</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderTotals(filtered){
+    const tronchiCount = new Set(filtered.map(r => r.id)).size;
+    const ditteCount = new Set(filtered.map(r => r.ditta).filter(Boolean)).size;
+
+    const totSum  = filtered.reduce((s,r) => s + (Number(r.tot)||0), 0);
+    const doneSum = filtered.reduce((s,r) => s + (Number(r.done)||0), 0);
+
+    const deltaSum = filtered.reduce((s,r) => {
+      const baseDone = Number(baseMap[r.id] ?? 0);
+      return s + ((Number(r.done)||0) - baseDone);
+    }, 0);
+
+    const percTot = totSum > 0 ? (doneSum / totSum) * 100 : 0;
+    const deltaPercTot = totSum > 0 ? (deltaSum / totSum) * 100 : 0;
+
+    totalsEl.innerHTML = `
+      <b>Tutti i tronchi</b> ·
+      Tronchi: <b>${tronchiCount}</b> ·
+      Ditte: <b>${ditteCount}</b> ·
+      Tot: <b>${fmt(totSum)}</b> m ·
+      Posati: <b>${fmt(doneSum)}</b> m ·
+      %: <b>${percTot.toFixed(1)}%</b> ·
+      m dal ${baseDate}: <b>${fmt(deltaSum)}</b> ·
+      Δ% dal ${baseDate}: <b>${deltaPercTot.toFixed(1)}%</b>
+    `;
+  }
+
+  function applyFilters(){
+    const t = filterTr.value;
+    const d = filterDi.value;
+
+    const filtered = rowsData.filter(r => {
+      const okT = !t || r.id === t;
+      const okD = !d || r.ditta === d;
+      return okT && okD;
+    });
+
+    // Totali + tabella
+    renderTotals(filtered);
+    renderTable(filtered);
+
+    // Mappa: mostra solo tronchi filtrati
+    const visibleIds = new Set(filtered.map(r => r.id));
+    Object.entries(layersByTronco).forEach(([id, arr]) => {
+      const show = visibleIds.has(id);
+      arr.forEach(layer => {
+        if(show){
+          if(!map.hasLayer(layer)) layer.addTo(map);
+        }else{
+          if(map.hasLayer(layer)) map.removeLayer(layer);
         }
 
         return null;
@@ -676,135 +758,20 @@
           });
         });
       }
+    });
 
-      filterTr.addEventListener("change", applyFilters);
-      filterDi.addEventListener("change", applyFilters);
-      resetBtn.addEventListener("click", () => {
-        filterTr.value = "";
-        filterDi.value = "";
-        applyFilters();
-      });
+    // filters + first render
+    updateCompactLayout();
+    buildFilters();
+    applyFilters();
+  })
+  .catch(err => {
+    console.error(err);
+    setStatus("errore");
+    alert(err.message || "Errore nel caricamento");
+  });
 
-      /* ========================================================
-         H) CARICAMENTO DATI E DISEGNO
-         ======================================================== */
-      setStatus("caricamento…");
-
-      Promise.all([
-        fetch(`${FILE_TRONCHI}?cb=${CB}`).then((response) => {
-          if (!response.ok) throw new Error(`tronchi.geojson HTTP ${response.status}`);
-          return response.json();
-        }),
-        fetch(`${FILE_AVANZ}?cb=${CB}`).then((response) => {
-          if (!response.ok) throw new Error(`avanzamento.json HTTP ${response.status}`);
-          return response.json();
-        })
-      ])
-        .then(([geo, avanz]) => {
-          setStatus("dati caricati");
-          setUpdated(`aggiornato: ${avanz._updated || "NON INDICATO nel JSON"}`);
-
-          baseDate = avanz._baseline_date || "2026-01-27";
-          baseMap = avanz._baseline_done || {};
-          setBaseline(`baseline: ${baseDate}`);
-
-          const cleanFeatures = (geo.features || []).map(sanitizeFeature).filter(Boolean);
-
-          // Mappa dati JSON+GeoJSON in un dataset unificato per rendering tabella e mappa.
-          rowsData = [];
-          cleanFeatures.forEach((feature) => {
-            const id = getTroncoId(feature.properties);
-            if (!id) return;
-
-            const datiAvanzamento = avanz[String(id)];
-            if (!datiAvanzamento) return;
-
-            const ditta = getDitta(feature.properties);
-            const tot = Number(datiAvanzamento.tot) || 0;
-            const done = Number(datiAvanzamento.done) || 0;
-            const perc = tot > 0 ? (done / tot) * 100 : 0;
-            const col = colorForTronco(id);
-
-            rowsData.push({
-              id: String(id),
-              ditta,
-              tot,
-              done,
-              perc,
-              col,
-              feature
-            });
-          });
-
-          // Ordinamento richiesto: PV,1,2,3-1,3-2,4,5.
-          rowsData.sort((a, b) => orderIndex(a.id) - orderIndex(b.id) || a.id.localeCompare(b.id));
-
-          // Zoom automatico sull'estensione dei tronchi disponibili.
-          const tmp = L.geoJSON({ type: "FeatureCollection", features: cleanFeatures }).addTo(map);
-          if (cleanFeatures.length) map.fitBounds(tmp.getBounds());
-          map.removeLayer(tmp);
-
-          // Ridisegna tutti i layer tronco (residuo + posato + marker avanzamento).
-          clearLayers();
-
-          rowsData.forEach((row) => {
-            const id = row.id;
-            const feature = row.feature;
-            const color = row.col;
-            const ditta = row.ditta;
-
-            layersByTronco[id] = layersByTronco[id] || [];
-
-            const { segPosato, segResiduo } = splitSegments(feature, row.done, row.tot);
-
-            // Segmento residuo (linea piena).
-            if (segResiduo) {
-              const layerResiduo = L.geoJSON(segResiduo, {
-                style: { color, weight: 5, opacity: 1 }
-              }).addTo(map);
-              layersByTronco[id].push(layerResiduo);
-            }
-
-            // Segmento posato (linea tratteggiata).
-            if (segPosato) {
-              const layerPosato = L.geoJSON(segPosato, {
-                style: { color, weight: 5, opacity: 1, dashArray: "10 8" }
-              }).addTo(map);
-              layersByTronco[id].push(layerPosato);
-            }
-
-            // Marker punto avanzamento.
-            const result = progressPoint(feature, row.done, row.tot);
-            if (result.ok && result.point) {
-              const [lng, lat] = result.point.geometry.coordinates;
-              const marker = L.circleMarker([lat, lng], {
-                radius: 7,
-                color,
-                fillColor: color,
-                fillOpacity: 1
-              })
-                .bindPopup(`
-                  <b>Tronco ${id}</b><br>
-                  ${ditta ? `<i>${ditta}</i><br>` : ""}
-                  ${fmt(row.done)} / ${fmt(row.tot)} m<br>
-                  ${(Math.min(row.done / (row.tot || 1), 1) * 100).toFixed(1)} %
-                `)
-                .addTo(map);
-
-              layersByTronco[id].push(marker);
-            }
-          });
-
-          // Prima renderizzazione UI.
-          buildFilters();
-          applyFilters();
-        })
-        .catch((error) => {
-          console.error(error);
-          setStatus("errore");
-          alert(error.message || "Errore nel caricamento");
-        });
-    })();
-  </script>
+})();
+</script>
 </body>
 </html>
