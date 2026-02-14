@@ -20,7 +20,7 @@
     --border:#ddd;
     --shadow: 0 8px 28px rgba(0,0,0,.12);
   }
-  body{ margin:0; font-family: Arial, sans-serif; color:var(--fg); background:var(--bg); }
+  body{ margin:0; font-family: Arial, sans-serif; color:var(--fg); background:var(--bg); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
   header{ padding:10px 14px; border-bottom:1px solid var(--border); background:#fff; }
   .topline{ display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; }
   .title{ max-width: 1200px; line-height: 1.25; font-size: 14px; }
@@ -29,7 +29,7 @@
   .pill{ border:1px solid var(--border); border-radius:999px; padding:4px 10px; background:#f7f7f7; }
   .logos{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
   .logos img{ height:42px; width:auto; object-fit:contain; border:1px solid #eee; border-radius:10px; padding:6px 8px; background:#fff; }
-  #map{ height: calc(100vh - 122px); }
+  #map{ flex:1; min-height:0; }
 
   /* Overlay */
   .overlay{
@@ -83,7 +83,7 @@
   /* Table */
   table{ width:100%; border-collapse:collapse; font-size:12px; }
   th, td{ padding:8px 8px; border-bottom:1px solid #eee; text-align:right; white-space:nowrap; }
-  th{ position:sticky; top:44px; background:#fff; z-index:2; border-bottom:1px solid var(--border); }
+  th{ position:sticky; top:0; background:#fff; z-index:2; border-bottom:1px solid var(--border); }
   td:first-child, th:first-child, td:nth-child(2), th:nth-child(2){ text-align:left; }
   .swatch{ display:inline-block; width:10px; height:10px; border-radius:999px; margin-right:6px; vertical-align:middle; }
   .bar{ height:8px; background:#eee; border-radius:999px; overflow:hidden; margin-top:4px; }
@@ -147,7 +147,6 @@
 
   @media (max-width:720px){
     .logos img{ height:34px; }
-    #map{ height: calc(100vh - 168px); }
     .overlay{ top:182px; left:14px; right:14px; width:auto; }
   }
 </style>
