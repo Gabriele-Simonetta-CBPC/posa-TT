@@ -1,570 +1,195 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Avanzamento posa condotta – Scheda informativa</title>
-
-  <link rel="icon" href="data:," />
-
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PNRR M2C4 – Investimento 4.3 | KPI di progetto</title>
+  <link rel="icon" href="data:,"/>
   <style>
     :root{
-      --bg:#ffffff;
+      --bg:#f6f7f9;
       --fg:#111;
-      --muted:#666;
+      --muted:#5f6570;
       --panel:#fff;
-      --border:#ddd;
-      --shadow: 0 8px 28px rgba(0,0,0,.12);
-      --shadow2: 0 6px 16px rgba(0,0,0,.08);
-      --accent:#111;
-      --soft:#f7f7f7;
+      --border:#e3e6eb;
+      --soft:#f1f3f6;
+      --shadow:0 8px 22px rgba(0,0,0,.08);
+      --radius:14px;
     }
+    *{ box-sizing:border-box; min-width:0; }
+    body{ margin:0; font-family:Arial,sans-serif; background:var(--bg); color:var(--fg); }
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      color:var(--fg);
-      background:var(--bg);
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-    }
+    header{ background:#fff; border-bottom:1px solid var(--border); padding:10px 12px; }
+    .top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .title{ flex:1 1 860px; }
+    .title b{ display:block; font-size:22px; margin-bottom:4px; }
+    .subtitle{ font-size:13px; line-height:1.3; color:#1a1d22; }
+    .meta{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .meta-nav{ display:flex; gap:8px; flex-wrap:wrap; }
+    .meta-static{ display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
+    .pill{ border:1px solid var(--border); background:var(--soft); padding:4px 10px; border-radius:999px; font-size:12px; color:#2e333b; }
+    .navlink{ color:#111; text-decoration:none; font-weight:700; }
+    .navlink:hover{ background:#e9edf2; }
+    .logos{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .logos img{ height:40px; width:auto; object-fit:contain; border:1px solid #e8ebf1; border-radius:10px; padding:6px 8px; background:#fff; }
 
-    header{
-      padding:10px 14px;
-      border-bottom:1px solid var(--border);
-      background:#fff;
-    }
+    main{ padding:10px; max-width:1600px; margin:0 auto; }
+    .dashboard{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:10px; }
+    .dashHead{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+    .dashHead .h{ font-weight:700; font-size:16px; }
+    .dashHead .hint{ color:var(--muted); font-size:12px; }
 
-    .topline{
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
+    .cards{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .card{ border:1px solid var(--border); border-radius:12px; background:#fff; padding:10px; display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+    .k{ font-size:12px; color:var(--muted); }
+    .v{ font-size:40px; font-weight:700; line-height:1.18; }
+    .s{ font-size:12px; color:#4d535e; line-height:1.35; }
 
-    .title{
-      max-width: 1200px;
-      line-height: 1.25;
-      font-size: 14px;
-    }
-    .title b{
-      font-size: 16px;
-      display:block;
-      margin-bottom:4px;
-    }
-    .meta{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      margin-top:8px;
-      color:var(--muted);
-      font-size:12px;
-    }
-    .pill{
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:4px 10px;
-      background:var(--soft);
-    }
-    .navlink{
-      color:#111;
-      text-decoration:none;
-      font-weight:600;
-    }
-    .navlink:hover{ background:#efefef; }
+    .pRow{ display:flex; justify-content:space-between; font-size:12px; }
+    .bar{ height:8px; border-radius:999px; background:#eceff4; overflow:hidden; border:1px solid #e2e6ee; }
+    .bar > div{ height:100%; width:0; background:#111; }
+    .barMeta{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
 
-    .logos{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .logos img{
-      height:42px;
-      width:auto;
-      object-fit:contain;
-      border:1px solid #eee;
-      border-radius:10px;
-      padding:6px 8px;
-      background:#fff;
-    }
+    .donutWrap{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    canvas.donut{ width:88px; height:88px; border:1px solid var(--border); border-radius:50%; background:#fff; flex:0 0 auto; }
+    .donutText{ display:flex; flex-direction:column; gap:6px; min-width:0; flex:1 1 140px; overflow-wrap:anywhere; }
+    .badge{ border:1px solid var(--border); background:var(--soft); padding:2px 8px; border-radius:999px; font-size:11px; width:max-content; max-width:100%; }
 
-    main{
-      padding:14px;
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:14px;
-      align-items:start;
-    }
+    .foot{ margin-top:10px; border:1px dashed #d8dde5; border-radius:12px; padding:8px 10px; font-size:12px; color:var(--muted); background:#fbfcfe; }
 
-    .panel{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:14px;
-      box-shadow:var(--shadow);
-      overflow:hidden;
+    @media (max-width:1200px){
+      .cards{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .v{ font-size:34px; }
+      .meta-static{ margin-left:0; }
     }
-
-    .panel-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:10px 12px;
-      border-bottom:1px solid var(--border);
-      background:#fafafa;
-      flex-wrap:wrap;
-    }
-    .panel-header .h{
-      font-weight:700;
-      font-size:13px;
-    }
-    .panel-body{
-      padding:12px;
-      background:#fff;
-    }
-
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-
-    .kpi{
-      border:1px solid #eee;
-      border-radius:12px;
-      padding:10px 12px;
-      background:#fff;
-      box-shadow:var(--shadow2);
-    }
-    .kpi .k{
-      font-size:11px;
-      color:var(--muted);
-      margin-bottom:6px;
-    }
-    .kpi .v{
-      font-size:16px;
-      font-weight:700;
-      letter-spacing:.2px;
-    }
-    .kpi .s{
-      margin-top:6px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.35;
-    }
-
-    .note{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.5;
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:12px;
-    }
-    th, td{
-      padding:8px 8px;
-      border-bottom:1px solid #eee;
-      text-align:right;
-      white-space:nowrap;
-      vertical-align:top;
-    }
-    th{
-      position:sticky;
-      top:0;
-      background:#fff;
-      z-index:1;
-      border-bottom:1px solid var(--border);
-      font-weight:700;
-    }
-    td:first-child, th:first-child{ text-align:left; white-space:normal; }
-    .small{ font-size:11px; color:var(--muted); }
-    .tag{
-      display:inline-block;
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:999px;
-      padding:2px 8px;
-      font-size:11px;
-      color:#333;
-      margin-right:6px;
-      margin-bottom:6px;
-    }
-
-    details{
-      border:1px solid #eee;
-      border-radius:12px;
-      padding:10px 12px;
-      margin:10px 0;
-      background:#fff;
-      box-shadow:var(--shadow2);
-    }
-    summary{
-      cursor:pointer;
-      font-weight:700;
-      font-size:12px;
-      list-style:none;
-    }
-    summary::-webkit-details-marker{ display:none; }
-
-    .list{
-      margin:10px 0 0;
-      padding-left:18px;
-      color:#222;
-      font-size:12px;
-      line-height:1.55;
-    }
-    .list li{ margin:6px 0; }
-
-    .btnrow{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    button{
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:10px;
-      padding:6px 10px;
-      font-size:12px;
-      cursor:pointer;
-    }
-    button:hover{ background:#f5f5f5; }
-    button.primary{
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
-    button.primary:hover{ filter:brightness(.95); }
-
-    @media (max-width: 980px){
-      main{ grid-template-columns: 1fr; }
-    }
-    @media (max-width: 720px){
+    @media (max-width:760px){
+      .cards{ grid-template-columns:1fr; }
+      .title b{ font-size:19px; }
+      .subtitle{ font-size:12px; }
+      .v{ font-size:30px; }
       .logos img{ height:34px; }
-      .grid2{ grid-template-columns: 1fr; }
-    }
-
-    @media print{
-      header{ position:sticky; top:0; }
-      main{ display:block; }
-      .panel{ box-shadow:none; }
-      .kpi, details{ box-shadow:none; }
-      button{ display:none; }
     }
   </style>
 </head>
-
 <body>
 <header>
-  <div class="topline">
+  <div class="top">
     <div class="title">
-      <b>Schema irriguo Tidone – Scheda informativa</b>
-      Intervento: adeguamenti funzionali del sistema di adduzione in sponda sinistra e destra Tidone (tronchi: 1) Bruso–Il Rio; 2) Tavernago–Tuna → Lago delle Lische; 3) Lago delle Lische → Tuna). Localizzazione: Borgonovo V.T., Agazzano, Gragnano T.se, Gazzola, Castel San Giovanni (PC). CUP <b>G99J21006930005</b>.
+      <b>PNRR M2C4 – Investimento 4.3 | KPI di progetto</b>
+      <div class="subtitle">Schema irriguo Tidone: interventi di risparmio idrico per il contrasto alla siccità e adeguamenti funzionali del sistema adduzione in sponda sinistra e destra Tidone. Codice intervento 08-05-5703-847. CUP G99J21006930005.</div>
       <div class="meta">
-        <span class="pill" id="status">documento sintetico</span>
-        <span class="pill" id="updated">dati: Progetto 2021 + Revisione prezzi 2022</span>
-        <span class="pill" id="baseline">COD. LOC: 00094</span>
-        <a class="pill navlink" href="index.html">Apri mappa avanzamento</a>
+        <div class="meta-nav">
+          <a class="pill navlink" href="index.html">Mappa avanzamento</a>
+          <a class="pill navlink" href="forniture.html">Forniture</a>
+          <a class="pill navlink" href="quadro-economico.html">Quadro economico</a>
+        </div>
+        <div class="meta-static">
+          <span class="pill">Target risparmio idrico: 300.000 m³/stagione</span>
+          <span class="pill">Misuratori fonte Pievetta: n. 4</span>
+        </div>
       </div>
     </div>
 
-    <div class="logos" aria-label="Loghi (opzionali)">
-      <!-- opzionale: come nel tuo template. Metti i file in assets/ -->
-      <img src="assets/italiadomani.png" alt="Italia Domani (opzionale)">
-      <img src="assets/masaf.png" alt="MASAF (opzionale)">
-      <img src="assets/nextgenerationeu.png" alt="NextGenerationEU (opzionale)">
-      <img src="assets/consorzio.png" alt="Consorzio (opzionale)">
+    <div class="logos">
+      <img src="assets/italiadomani.png" alt="Italia Domani">
+      <img src="assets/masaf.png" alt="MASAF">
+      <img src="assets/nextgenerationeu.png" alt="NextGenerationEU">
+      <img src="assets/consorzio.png" alt="Consorzio">
     </div>
   </div>
 </header>
 
 <main>
-  <!-- COLONNA SX: descrizione + interventi -->
-  <section class="panel">
-    <div class="panel-header">
-      <div class="h">Quadro generale</div>
-      <div class="btnrow">
-        <button id="btnExpand">Espandi tutto</button>
-        <button id="btnCollapse">Comprimi tutto</button>
-        <button class="primary" onclick="window.print()">Stampa / PDF</button>
-      </div>
+  <section class="dashboard">
+    <div class="dashHead">
+      <div class="h">KPI PNRR – Quadro sintetico</div>
+      <div class="hint">Vista unica e compatta (desktop e mobile).</div>
     </div>
-    <div class="panel-body">
-      <div class="grid2">
-        <div class="kpi">
-          <div class="k">Importo complessivo (progetto 2021)</div>
-          <div class="v">€ 6.600.000,00</div>
-          <div class="s small">Progetto esecutivo (PE).</div>
+
+    <div class="cards">
+      <article class="card">
+        <div class="k">Risparmio risorsa irrigua</div>
+        <div class="v">300.000 m³/stagione</div>
+        <div class="s">Riduzione del prelievo alla fonte stimata in circa 300.000 m³ a stagione.</div>
+        <div class="pRow"><span>Target</span><span>100%</span></div>
+        <div class="bar"><div style="width:100%"></div></div>
+        <div class="barMeta"><span>0</span><span>300.000</span></div>
+      </article>
+
+      <article class="card">
+        <div class="k">Efficienza distribuzione</div>
+        <div class="v">Perdite: 48% → ~2%</div>
+        <div class="s">Conversione in condotta in pressione con riduzione delle perdite di trasporto.</div>
+        <div class="donutWrap">
+          <canvas class="donut" id="donut_losses" width="88" height="88"></canvas>
+          <div class="donutText">
+            <div class="v" style="font-size:18px">Target: 2% perdite</div>
+            <span class="badge">Baseline: 48% perdite</span>
+          </div>
         </div>
-        <div class="kpi">
-          <div class="k">Importo complessivo (revisione prezzi 2022)</div>
-          <div class="v">€ 7.526.380,00</div>
-          <div class="s small">Differenza da finanziare indicata: € 926.380,00.</div>
+      </article>
+
+      <article class="card">
+        <div class="k">Area irrigua efficientata</div>
+        <div class="v">7.448 ha</div>
+        <div class="s">Distretto Sinistra Trebbia considerato per intero nella relazione tecnica.</div>
+        <div class="pRow"><span>Target</span><span>100%</span></div>
+        <div class="bar"><div style="width:100%"></div></div>
+        <div class="barMeta"><span>0</span><span>7.448</span></div>
+      </article>
+
+      <article class="card">
+        <div class="k">Misurazione prelievi</div>
+        <div class="v">n. 4 misuratori</div>
+        <div class="s">Misuratori di portata prelevata alla fonte Po Pievetta.</div>
+        <div class="pRow"><span>Target</span><span>100%</span></div>
+        <div class="bar"><div style="width:100%"></div></div>
+        <div class="barMeta"><span>0</span><span>4</span></div>
+      </article>
+
+      <article class="card">
+        <div class="k">Miglioramento servizio rete</div>
+        <div class="v">17–20 h → 3–4 h</div>
+        <div class="s">Riduzione del tempo di percorrenza e maggiore flessibilità gestionale.</div>
+        <div class="donutWrap">
+          <canvas class="donut" id="donut_time" width="88" height="88"></canvas>
+          <div class="donutText">
+            <div class="v" style="font-size:18px">Riduzione ~80%</div>
+            <span class="badge">Target dinamica rete</span>
+          </div>
         </div>
+      </article>
 
-        <div class="kpi">
-          <div class="k">Forniture in appalto (totale)</div>
-          <div class="v">€ 4.158.143,00</div>
-          <div class="s small">Ripartizione per “Opere generali” e Tronchi 1–4 nel QE.</div>
-        </div>
-        <div class="kpi">
-          <div class="k">Servizi in appalto (totale)</div>
-          <div class="v">€ 365.062,21</div>
-          <div class="s small">Bonifica amianto Tronco 1 + oneri sicurezza.</div>
-        </div>
-      </div>
-
-      <p class="note" style="margin:12px 0 0;">
-        Il progetto è impostato con contratti di <b>fornitura</b> (tubazioni PVC, pezzi speciali, elettropompe, TLC/RTU, ecc.)
-        e un contratto di <b>servizi</b> per la bonifica di tubazioni in cemento contenente amianto; le lavorazioni di posa risultano previste
-        con mezzi/personale del Consorzio.
-      </p>
-
-      <details open>
-        <summary>Obiettivi e criteri dell’intervento</summary>
-        <ul class="list">
-          <li>Miglioramento misurazione prelievi (misuratori + telecontrollo) alla fonte “Pievetta”.</li>
-          <li>Adeguamento normativo: sostituzione condotta in cemento amianto con tubazione in PVC di diametro adeguato.</li>
-          <li>Risparmio risorsa: “copertura” del canale in terra Tavernago–Tuna con condotta in pressione in PVC.</li>
-          <li>Risparmio energetico: ammodernamento elettropompe (stazioni RDB e Bruso).</li>
-        </ul>
-      </details>
-
-      <details>
-        <summary>Interventi principali (parte generale – Pievetta)</summary>
-        <div style="margin-top:10px;">
-          <span class="tag">Telecontrollo</span>
-          <span class="tag">Misuratori portata</span>
-          <span class="tag">Layflat 9.500 m</span>
-        </div>
-        <ul class="list">
-          <li>Adeguamento sistema centrale di telecontrollo per ricevere i nodi TLC/RTU.</li>
-          <li>Misuratori di portata prelevata alla fonte Po Pievetta: <b>n. 4</b>.</li>
-          <li>Misuratori presso stazione Caramello e vasca Il Rio per monitoraggio portate distribuite.</li>
-          <li>Tubazione mobile Layflat: <b>9.500 m</b>, diametro interno 207 mm (8”).</li>
-        </ul>
-      </details>
-
-      <details>
-        <summary>Interventi per tronco (sintesi tecnica)</summary>
-
-        <details>
-          <summary>Tronco 1 – Bruso → vasca Il Rio</summary>
-          <ul class="list">
-            <li>Bonifica tubazioni in cemento amianto: <b>2.164 m</b>, <b>DN 400</b> (prelievo, marcatura e conferimento).</li>
-            <li>Sostituzione con tubazione PVC: <b>2.164 m</b>, <b>DN 630</b> PVC EN ISO 1452 PN6 + pezzi speciali acciaio (curve <b>n. 11</b>).</li>
-            <li>Sabbia di cava per rinfianco: sezione media 0,3 m²/m → <b>649,2 m³</b>.</li>
-            <li>Manufatti di regolazione: derivazioni <b>n. 3</b>, attuatori <b>n. 3</b>, stazioni controllo remoto <b>n. 4</b>.</li>
-            <li>Pozzetti prefabbricati 150×150×150 cm: <b>n. 6</b>.</li>
-          </ul>
-        </details>
-
-        <details>
-          <summary>Tronco 2 – vasca Il Rio → innesto su condotta acciaio DN600 (sponda sinistra Tidone)</summary>
-          <ul class="list">
-            <li>Copertura canale Tavernago–Tuna: <b>244 m</b> PVC DN 630 EN ISO 1452 PN6 + curve acciaio <b>n. 6</b>.</li>
-            <li>Sabbia di cava per rinfianco: <b>73,2 m³</b>.</li>
-            <li>Regolazioni: derivazioni <b>n. 2</b>, attuatori <b>n. 2</b>, stazioni controllo remoto <b>n. 1</b>.</li>
-            <li>Pozzetti 150×150×150 cm: <b>n. 6</b>.</li>
-            <li>Serbatoio PE corrugato (vasca compenso): volume <b>37.800 l</b>.</li>
-          </ul>
-        </details>
-
-        <details>
-          <summary>Tronco 3 – innesto su condotta DN600 (sponda destra Tidone) → Lago delle Lische</summary>
-          <ul class="list">
-            <li>Copertura canale: <b>5.749 m</b> PVC DN 630 + curve acciaio <b>n. 66</b>.</li>
-            <li>Sabbia per rinfianco: <b>1.724,7 m³</b>.</li>
-            <li>Regolazioni: derivazioni <b>n. 7</b>, sezionamenti <b>n. 4</b>, attuatori <b>n. 11</b>, stazioni controllo <b>n. 11</b>.</li>
-            <li>Pozzetti 150×150×150 cm: <b>n. 24</b>.</li>
-          </ul>
-        </details>
-
-        <details>
-          <summary>Tronco 4 – Lago delle Lische → Tuna</summary>
-          <ul class="list">
-            <li>Copertura canale: <b>6.389 m</b> PVC DN 630 + curve acciaio <b>n. 84</b>.</li>
-            <li>Sabbia per rinfianco: <b>1.916,7 m³</b>.</li>
-            <li>Regolazioni: derivazioni <b>n. 15</b>, sezionamenti <b>n. 4</b>, attuatori <b>n. 19</b>, stazioni controllo <b>n. 19</b>.</li>
-            <li>Pozzetti 150×150×150 cm: <b>n. 32</b>.</li>
-          </ul>
-        </details>
-
-      </details>
+      <article class="card">
+        <div class="k">Baseline volumi Tavernago-Tuna</div>
+        <div class="v">1.749.600 m³/stagione</div>
+        <div class="s">Portata media ~300 l/s, servizio 67,5 gg, perdite baseline 48%.</div>
+      </article>
     </div>
+
+    <div class="foot">Fonti tecniche: relazione agronomica/risparmio idrico e capitolato CSA interventi.</div>
   </section>
-
-  <!-- COLONNA DX: tabelle economiche -->
-  <aside class="panel">
-    <div class="panel-header">
-      <div class="h">Quadro economico (sintesi)</div>
-      <div class="btnrow">
-        <button id="btnTogglePrices">Mostra 2021 / 2022</button>
-      </div>
-    </div>
-
-    <div class="panel-body">
-      <div class="note" style="margin-bottom:10px;">
-        Importi da QE: confronto <b>Progetto 2021</b> e <b>Revisione prezzi 2022</b>.
-      </div>
-
-      <div class="panel" style="box-shadow:var(--shadow2); border-radius:12px; margin-bottom:12px;">
-        <div class="panel-header" style="border-radius:12px 12px 0 0;">
-          <div class="h">A) Forniture e servizi in appalto</div>
-        </div>
-        <div class="panel-body" style="padding:0;">
-          <div style="max-height: 320px; overflow:auto;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Voce</th>
-                  <th class="col2021">2021 (€)</th>
-                  <th class="col2022" style="display:none;">2022 (€)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Forniture in appalto (totale)</td>
-                  <td class="col2021">4.158.143,00</td>
-                  <td class="col2022" style="display:none;">4.972.404,00</td>
-                </tr>
-                <tr>
-                  <td>Servizi: bonifica amianto (Tronco 1)</td>
-                  <td class="col2021">341.062,21</td>
-                  <td class="col2022" style="display:none;">375.183,89</td>
-                </tr>
-                <tr>
-                  <td>Oneri sicurezza (non ribassabili)</td>
-                  <td class="col2021">24.000,00</td>
-                  <td class="col2022" style="display:none;">26.418,26</td>
-                </tr>
-                <tr>
-                  <td><b>Totale A)</b></td>
-                  <td class="col2021"><b>4.523.205,21</b></td>
-                  <td class="col2022" style="display:none;"><b>5.374.006,15</b></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" style="box-shadow:var(--shadow2); border-radius:12px;">
-        <div class="panel-header" style="border-radius:12px 12px 0 0;">
-          <div class="h">B) Somme a disposizione</div>
-        </div>
-        <div class="panel-body" style="padding:0;">
-          <div style="max-height: 380px; overflow:auto;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Voce</th>
-                  <th class="col2021">2021 (€)</th>
-                  <th class="col2022" style="display:none;">2022 (€)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Allacciamenti ai pubblici servizi</td>
-                  <td class="col2021">100.000,00</td>
-                  <td class="col2022" style="display:none;">110.000,00</td>
-                </tr>
-                <tr>
-                  <td>Imprevisti (3% di A)</td>
-                  <td class="col2021">135.696,16</td>
-                  <td class="col2022" style="display:none;">—</td>
-                </tr>
-                <tr>
-                  <td>Acquisizione aree / indennizzi</td>
-                  <td class="col2021">621.092,09</td>
-                  <td class="col2022" style="display:none;">591.516,28</td>
-                </tr>
-                <tr>
-                  <td>Spese tecniche (CSE)</td>
-                  <td class="col2021">49.961,63</td>
-                  <td class="col2022" style="display:none;">47.582,51</td>
-                </tr>
-                <tr>
-                  <td>Spese tecniche (Direttore operativo)</td>
-                  <td class="col2021">19.984,66</td>
-                  <td class="col2022" style="display:none;">19.033,01</td>
-                </tr>
-                <tr>
-                  <td>Commissioni giudicatrici</td>
-                  <td class="col2021">9.450,00</td>
-                  <td class="col2022" style="display:none;">9.000,00</td>
-                </tr>
-                <tr>
-                  <td>Collaudi / verifiche tecniche</td>
-                  <td class="col2021">78.555,81</td>
-                  <td class="col2022" style="display:none;">74.815,06</td>
-                </tr>
-                <tr>
-                  <td>IVA e imposte su A + voci selezionate</td>
-                  <td class="col2021">1.245.215,57</td>
-                  <td class="col2022" style="display:none;">1.081.868,03</td>
-                </tr>
-                <tr>
-                  <td>Interferenze</td>
-                  <td class="col2021">17.250,00</td>
-                  <td class="col2022" style="display:none;">18.112,50</td>
-                </tr>
-                <tr>
-                  <td>Arrotondamento</td>
-                  <td class="col2021">33,75</td>
-                  <td class="col2022" style="display:none;">1,59</td>
-                </tr>
-                <tr>
-                  <td><b>Totale B)</b></td>
-                  <td class="col2021"><b>2.076.794,79</b></td>
-                  <td class="col2022" style="display:none;"><b>2.152.373,85</b></td>
-                </tr>
-                <tr>
-                  <td><b>Totale (A + B)</b></td>
-                  <td class="col2021"><b>6.600.000,00</b></td>
-                  <td class="col2022" style="display:none;"><b>7.526.380,00</b></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <p class="note" style="margin-top:10px;">
-        Nota: nel QE è indicato anche “da finanziare” per revisione 2022 pari a <b>€ 926.380,00</b>.
-      </p>
-
-    </div>
-  </aside>
 </main>
 
 <script>
-  // Expand / collapse all details
-  const allDetails = () => Array.from(document.querySelectorAll('details'));
-  document.getElementById('btnExpand').addEventListener('click', () => allDetails().forEach(d => d.open = true));
-  document.getElementById('btnCollapse').addEventListener('click', () => allDetails().forEach(d => d.open = false));
-
-  // Toggle 2021/2022 columns
-  let showing2022 = false;
-  const btnToggle = document.getElementById('btnTogglePrices');
-  const setCols = () => {
-    document.querySelectorAll('.col2021').forEach(el => el.style.display = showing2022 ? 'none' : '');
-    document.querySelectorAll('.col2022').forEach(el => el.style.display = showing2022 ? '' : 'none');
-    btnToggle.textContent = showing2022 ? 'Mostra 2022 / 2021' : 'Mostra 2021 / 2022';
-  };
-  btnToggle.addEventListener('click', () => { showing2022 = !showing2022; setCols(); });
-  setCols();
+  function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+  function drawDonut(id, value){
+    const c=document.getElementById(id);
+    if(!c) return;
+    const ctx=c.getContext('2d');
+    const w=c.width, h=c.height;
+    const cx=w/2, cy=h/2;
+    const r=Math.min(w,h)/2-8;
+    const t=10;
+    ctx.clearRect(0,0,w,h);
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.strokeStyle='#eceff4'; ctx.lineWidth=t; ctx.stroke();
+    const start=-Math.PI/2; const end=start+Math.PI*2*clamp01(value);
+    ctx.beginPath(); ctx.arc(cx,cy,r,start,end); ctx.strokeStyle='#111'; ctx.lineWidth=t; ctx.lineCap='round'; ctx.stroke();
+    ctx.fillStyle='#111'; ctx.font='bold 14px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(Math.round(value*100)+'%',cx,cy);
+  }
+  drawDonut('donut_losses',0.98);
+  drawDonut('donut_time',0.80);
 </script>
-
 </body>
 </html>
