@@ -357,7 +357,7 @@
         <div class="item"><span class="sym circle pieno"></span><span>Tipo 1 = Innesto</span></div>
         <div class="item"><span class="sym square pieno"></span><span>Tipo 2 = Derivazione</span></div>
         <div class="item"><span class="sym diamond pieno"></span><span>Tipo 3 = Sezionamento</span></div>
-        <div class="item"><span class="sym square pieno"></span><span>Senza tipo: simbolo curva (0/30/45/60/90)</span></div>
+        <div class="item"><span class="sym circle pieno"></span><span>Senza tipo (curve): simbolo tondo</span></div>
         <div class="item"><span class="sym circle posato"></span><span>Posato = tratteggio/semitrasparente</span></div>
         <div class="item"><span class="sym circle pieno"></span><span>Non posato = pieno</span></div>
       `;
@@ -442,8 +442,7 @@
     if(tipo === "1") return "circle";
     if(tipo === "2") return "square";
     if(tipo === "3") return "diamond";
-    if(curva === "0") return "circle";
-    return "square";
+    return "circle";
   }
   function tipoLabel(tipo){
     if(tipo === "1") return "Innesto";
@@ -781,7 +780,7 @@
       if(res.ok && res.point){
         const [lng, lat] = res.point.geometry.coordinates;
         const p = L.circleMarker([lat, lng], {
-          radius: 7, color: col, fillColor: col, fillOpacity: 1
+          radius: 5, weight: 1, color: col, fillColor: col, fillOpacity: 1
         }).bindPopup(`
           <b>Tronco ${id}</b><br>
           ${ditta ? `<i>${ditta}</i><br>` : ""}
