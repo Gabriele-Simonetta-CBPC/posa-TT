@@ -1,0 +1,131 @@
+{
+  "fonte_dati": "Delibera Comitato Amministrativo n. 50/2026 (CA_050.pdf)",
+  "ultimo_aggiornamento": "2026-02-16",
+  "ultima_delibera_comitato": {
+    "numero": "Delibera n. 50/2026",
+    "data": "2026-02-11",
+    "oggetto": "Approvazione Stato Avanzamento Forniture n. 9"
+  },
+  "forniture": [
+    {
+      "id": "F001",
+      "lotto": 1,
+      "cig": "9584745DC7",
+      "voce": "Tubazioni PVC DN 630",
+      "unita": "€",
+      "quantita_totale": 2230912.22,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Importo da quadro rideterminato post-aggiudicazione"
+    },
+    {
+      "id": "F002",
+      "lotto": 2,
+      "cig": "A0008B6114",
+      "voce": "Manufatti in acciaio e saracinesche di linea",
+      "unita": "€",
+      "quantita_totale": 534590.54,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Importo da quadro rideterminato post-aggiudicazione"
+    },
+    {
+      "id": "F003",
+      "lotto": 3,
+      "cig": "A00090FA83",
+      "voce": "Stazioni TLC e misuratori di portata",
+      "unita": "€",
+      "quantita_totale": 448090.2,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Importo da quadro rideterminato post-aggiudicazione"
+    },
+    {
+      "id": "F004",
+      "lotto": 4,
+      "cig": "A000B5D168",
+      "voce": "Tubazioni mobili complete di raccordi",
+      "unita": "€",
+      "quantita_totale": 238322.7,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Importo da quadro rideterminato post-aggiudicazione"
+    },
+    {
+      "id": "F005",
+      "lotto": 5,
+      "cig": "9585635C3B",
+      "voce": "Elettropompe",
+      "unita": "€",
+      "quantita_totale": 232859.99,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Importo da quadro rideterminato post-aggiudicazione"
+    },
+    {
+      "id": "F006",
+      "lotto": 6,
+      "cig": "A000B6EF6B",
+      "voce": "Attrezzature elettriche",
+      "unita": "€",
+      "quantita_totale": 0,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Voce e CIG da CA_050; importo da confermare"
+    },
+    {
+      "id": "F007",
+      "lotto": 7,
+      "cig": "A000B9B491",
+      "voce": "Materiali inerti",
+      "unita": "€",
+      "quantita_totale": 0,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Voce e CIG da CA_050; importo da confermare"
+    },
+    {
+      "id": "F008",
+      "lotto": 8,
+      "cig": "A012E494F1",
+      "voce": "Materiali edili",
+      "unita": "€",
+      "quantita_totale": 0,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Voce e CIG da CA_050; importo da confermare"
+    },
+    {
+      "id": "F009",
+      "lotto": 9,
+      "cig": "A017D8362D",
+      "voce": "Serbatoio in PE corrugato",
+      "unita": "€",
+      "quantita_totale": 0,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Voce e CIG da CA_050; importo da confermare"
+    },
+    {
+      "id": "F010",
+      "lotto": 10,
+      "cig": "958584163C",
+      "voce": "Servizio di bonifica tubazioni in cemento amianto",
+      "unita": "€",
+      "quantita_totale": 329298.9,
+      "quantita_consegnata": 0,
+      "quantita_posata": 0,
+      "stato_avanzamento": "Da aggiornare con SAF",
+      "note": "Servizio in appalto incluso nel monitoraggio"
+    }
+  ]
+}
