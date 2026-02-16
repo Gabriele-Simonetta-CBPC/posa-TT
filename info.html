@@ -3,537 +3,193 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>PNRR M2C4 – KPI Irrigazione | Schema irriguo Tidone</title>
+  <title>PNRR M2C4 – Investimento 4.3 | KPI di progetto</title>
   <link rel="icon" href="data:,"/>
-
   <style>
     :root{
-      --bg:#ffffff;
+      --bg:#f6f7f9;
       --fg:#111;
-      --muted:#666;
+      --muted:#5f6570;
       --panel:#fff;
-      --border:#ddd;
-      --shadow: 0 10px 30px rgba(0,0,0,.10);
-      --shadow2: 0 6px 16px rgba(0,0,0,.08);
-      --soft:#f7f7f7;
-      --accent:#111;
-      --radius:16px;
+      --border:#e3e6eb;
+      --soft:#f1f3f6;
+      --shadow:0 8px 22px rgba(0,0,0,.08);
+      --radius:14px;
     }
-    *{ box-sizing:border-box; }
-    body{ margin:0; font-family: Arial, sans-serif; background:var(--bg); color:var(--fg); }
-    header{
-      position:sticky; top:0; z-index:20;
-      background:#fff; border-bottom:1px solid var(--border);
-      padding:12px 14px;
-    }
+    *{ box-sizing:border-box; min-width:0; }
+    body{ margin:0; font-family:Arial,sans-serif; background:var(--bg); color:var(--fg); }
+
+    header{ background:#fff; border-bottom:1px solid var(--border); padding:10px 12px; }
     .top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
-    .title{ line-height:1.25; max-width:1100px; }
-    .title b{ display:block; font-size:16px; margin-bottom:4px; }
-    .subtitle{ font-size:13px; color:#222; }
-    .meta{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--muted); }
-    .pill{ border:1px solid var(--border); background:var(--soft); padding:4px 10px; border-radius:999px; }
-    .navlink{ color:#111; text-decoration:none; font-weight:600; }
-    .navlink:hover{ background:#efefef; }
-    .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:center; }
-    button{
-      border:1px solid var(--border); background:#fff;
-      border-radius:12px; padding:8px 10px;
-      font-size:12px; cursor:pointer;
-      box-shadow:var(--shadow2);
+    .title{ flex:1 1 860px; }
+    .title b{ display:block; font-size:22px; margin-bottom:4px; }
+    .subtitle{ font-size:13px; line-height:1.3; color:#1a1d22; }
+    .meta{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .meta-nav{ display:flex; gap:8px; flex-wrap:wrap; }
+    .meta-static{ display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
+    .pill{ border:1px solid var(--border); background:var(--soft); padding:4px 10px; border-radius:999px; font-size:12px; color:#2e333b; }
+    .navlink{ color:#111; text-decoration:none; font-weight:700; }
+    .navlink:hover{ background:#e9edf2; }
+    .logos{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .logos img{ height:40px; width:auto; object-fit:contain; border:1px solid #e8ebf1; border-radius:10px; padding:6px 8px; background:#fff; }
+
+    main{ padding:10px; max-width:1600px; margin:0 auto; }
+    .dashboard{ background:var(--panel); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:10px; }
+    .dashHead{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+    .dashHead .h{ font-weight:700; font-size:16px; }
+    .dashHead .hint{ color:var(--muted); font-size:12px; }
+
+    .cards{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; }
+    .card{ border:1px solid var(--border); border-radius:12px; background:#fff; padding:10px; display:flex; flex-direction:column; gap:8px; overflow:hidden; }
+    .k{ font-size:12px; color:var(--muted); }
+    .v{ font-size:40px; font-weight:700; line-height:1.18; }
+    .s{ font-size:12px; color:#4d535e; line-height:1.35; }
+
+    .pRow{ display:flex; justify-content:space-between; font-size:12px; }
+    .bar{ height:8px; border-radius:999px; background:#eceff4; overflow:hidden; border:1px solid #e2e6ee; }
+    .bar > div{ height:100%; width:0; background:#111; }
+    .barMeta{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); }
+
+    .donutWrap{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    canvas.donut{ width:88px; height:88px; border:1px solid var(--border); border-radius:50%; background:#fff; flex:0 0 auto; }
+    .donutText{ display:flex; flex-direction:column; gap:6px; min-width:0; flex:1 1 140px; overflow-wrap:anywhere; }
+    .badge{ border:1px solid var(--border); background:var(--soft); padding:2px 8px; border-radius:999px; font-size:11px; width:max-content; max-width:100%; }
+
+    .foot{ margin-top:10px; border:1px dashed #d8dde5; border-radius:12px; padding:8px 10px; font-size:12px; color:var(--muted); background:#fbfcfe; }
+
+    @media (max-width:1200px){
+      .cards{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .v{ font-size:34px; }
+      .meta-static{ margin-left:0; }
     }
-    button:hover{ background:#f5f5f5; }
-    button.primary{ border-color:#111; background:#111; color:#fff; box-shadow:none; }
-    button.primary:hover{ filter:brightness(.95); }
-
-    main{ padding:14px; max-width: 1280px; margin: 0 auto; }
-
-    /* Tabs */
-    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
-    .tab{
-      border:1px solid var(--border); background:#fff;
-      padding:10px 12px; border-radius:999px;
-      font-size:12px; cursor:pointer;
-      box-shadow:var(--shadow2); user-select:none;
-    }
-    .tab[aria-selected="true"]{ background:#111; color:#fff; border-color:#111; box-shadow:none; }
-    .tab.disabled{ opacity:.55; cursor:not-allowed; }
-
-    .panel{
-      background:var(--panel);
-      border:1px solid var(--border);
-      border-radius:var(--radius);
-      box-shadow:var(--shadow);
-      overflow:hidden;
-    }
-    .panelHeader{
-      padding:12px 14px; border-bottom:1px solid var(--border);
-      background:#fafafa; display:flex;
-      align-items:flex-end; justify-content:space-between;
-      gap:10px; flex-wrap:wrap;
-    }
-    .panelHeader .h{ font-weight:700; font-size:13px; }
-    .panelHeader .hint{ font-size:12px; color:var(--muted); }
-    .panelBody{ padding:14px; }
-
-    .grid{ display:grid; grid-template-columns: 1.15fr .85fr; gap:12px; align-items:start; }
-    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
-
-    .cards{ display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px; }
-    @media (max-width: 980px){ .cards{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 640px){ .cards{ grid-template-columns: 1fr; } }
-
-    .card{
-      border:1px solid #eee; border-radius:14px;
-      background:#fff; box-shadow:var(--shadow2);
-      padding:12px; display:flex; flex-direction:column; gap:10px;
-    }
-    .k{ font-size:11px; color:var(--muted); }
-    .v{ font-weight:700; font-size:18px; letter-spacing:.2px; }
-    .s{ font-size:12px; color:var(--muted); line-height:1.4; }
-
-    /* KPI progress */
-    .pRow{ display:flex; justify-content:space-between; gap:8px; font-size:12px; color:#222; }
-    .bar{
-      width:100%; height:10px; background:#efefef;
-      border-radius:999px; overflow:hidden; border:1px solid #e6e6e6;
-    }
-    .bar > div{ height:100%; width:0%; background:#111; }
-    .barMeta{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px; }
-
-    /* Donut */
-    .donutWrap{ display:flex; gap:12px; align-items:center; }
-    canvas.donut{
-      width:96px; height:96px; border-radius:999px;
-      background:#fff; border:1px solid #eee; box-shadow:var(--shadow2);
-    }
-    .donutText{ display:flex; flex-direction:column; gap:6px; }
-    .badge{
-      display:inline-block; border:1px solid var(--border);
-      background:var(--soft); padding:3px 8px;
-      border-radius:999px; font-size:11px; color:#333; width:max-content;
-    }
-
-    .callout{ border:1px dashed #d9d9d9; background:#fcfcfc; border-radius:14px; padding:12px; }
-    .note{ font-size:12px; color:var(--muted); line-height:1.55; }
-    .hidden{ display:none !important; }
-
-    /* Tables */
-    .tableWrap{
-      border:1px solid #eee; border-radius:14px;
-      overflow:auto; box-shadow:var(--shadow2); background:#fff;
-    }
-    table{ border-collapse:collapse; width:100%; font-size:12px; min-width: 680px; }
-    th, td{ padding:10px 10px; border-bottom:1px solid #eee; text-align:right; vertical-align:top; white-space:nowrap; }
-    th{ font-weight:700; background:#fff; position:sticky; top:0; z-index:1; border-bottom:1px solid var(--border); }
-    th:first-child, td:first-child{ text-align:left; white-space:normal; min-width: 260px; }
-
-    @media print{
-      header{ position:static; }
-      .tabs, .actions{ display:none; }
-      .panel{ box-shadow:none; }
+    @media (max-width:760px){
+      .cards{ grid-template-columns:1fr; }
+      .title b{ font-size:19px; }
+      .subtitle{ font-size:12px; }
+      .v{ font-size:30px; }
+      .logos img{ height:34px; }
     }
   </style>
 </head>
-
 <body>
 <header>
   <div class="top">
     <div class="title">
       <b>PNRR M2C4 – Investimento 4.3 | KPI di progetto</b>
-      <div class="subtitle">
-        Schema irriguo Tidone – Risparmio idrico, efficientamento rete, misurazione e telecontrollo. CUP <b>G99J21006930005</b>.
-      </div>
+      <div class="subtitle">Schema irriguo Tidone: interventi di risparmio idrico per il contrasto alla siccità e adeguamenti funzionali del sistema adduzione in sponda sinistra e destra Tidone. Codice intervento 08-05-5703-847. CUP G99J21006930005.</div>
       <div class="meta">
-        <span class="pill">Target/ risparmio idrico</span>
-        <span class="pill">Misuratori fonte Pievetta: n. 4</span>
-        <span class="pill">Realizzato: da caricare (scheda dedicata)</span>
-        <a class="pill navlink" href="index.html">Mappa avanzamento</a>
-        <a class="pill navlink" href="forniture.html">Forniture</a>
+        <div class="meta-nav">
+          <a class="pill navlink" href="index.html">Mappa avanzamento</a>
+          <a class="pill navlink" href="forniture.html">Forniture</a>
+          <a class="pill navlink" href="quadro-economico.html">Quadro economico</a>
+        </div>
+        <div class="meta-static">
+          <span class="pill">Target risparmio idrico: 300.000 m³/stagione</span>
+          <span class="pill">Misuratori fonte Pievetta: n. 4</span>
+        </div>
       </div>
     </div>
-    <div class="actions">
-      <button class="primary" onclick="window.print()">Stampa / PDF</button>
+
+    <div class="logos">
+      <img src="assets/italiadomani.png" alt="Italia Domani">
+      <img src="assets/masaf.png" alt="MASAF">
+      <img src="assets/nextgenerationeu.png" alt="NextGenerationEU">
+      <img src="assets/consorzio.png" alt="Consorzio">
     </div>
   </div>
 </header>
 
 <main>
-  <!-- Tabs -->
-  <div class="tabs" role="tablist" aria-label="Schede dashboard">
-    <div class="tab" role="tab" id="t-pnrr" aria-selected="true" aria-controls="p-pnrr" tabindex="0">KPI PNRR</div>
-    <div class="tab" role="tab" id="t-baseline" aria-selected="false" aria-controls="p-baseline" tabindex="-1">Baseline & benefici</div>
-    <div class="tab" role="tab" id="t-meters" aria-selected="false" aria-controls="p-meters" tabindex="-1">Misura & telecontrollo</div>
-    <div class="tab disabled" role="tab" id="t-realized" aria-selected="false" aria-controls="p-realized" tabindex="-1" aria-disabled="true">Realizzato (da caricare)</div>
-  </div>
-
-  <!-- KPI PNRR -->
-  <section class="panel" id="p-pnrr" role="tabpanel" aria-labelledby="t-pnrr">
-    <div class="panelHeader">
-      <div>
-        <div class="h">KPI PNRR – Target di progetto</div>
-        <div class="hint">Grafici impostati sui target (il confronto con il “realizzato” si attiva con dati consuntivi caricati).</div>
-      </div>
-      <div class="hint"><span class="badge">Stato: “Solo target”</span></div>
+  <section class="dashboard">
+    <div class="dashHead">
+      <div class="h">KPI PNRR – Quadro sintetico</div>
+      <div class="hint">Vista unica e compatta (desktop e mobile).</div>
     </div>
 
-    <div class="panelBody">
-      <div class="grid">
-        <div>
-          <div class="cards">
+    <div class="cards">
+      <article class="card">
+        <div class="k">Risparmio risorsa irrigua</div>
+        <div class="v">300.000 m³/stagione</div>
+        <div class="s">Riduzione del prelievo alla fonte stimata in circa 300.000 m³ a stagione.</div>
+        <div class="pRow"><span>Target</span><span>100%</span></div>
+        <div class="bar"><div style="width:100%"></div></div>
+        <div class="barMeta"><span>0</span><span>300.000</span></div>
+      </article>
 
-            <!-- KPI 1: Risparmio idrico (m³/stagione) -->
-            <div class="card">
-              <div class="k">KPI PNRR – Risparmio risorsa irrigua</div>
-              <div class="v" id="kpi_save_m3">300.000 m³/stagione</div>
-              <div class="s">
-                Atteso: riduzione prelievo alla fonte “per circa 300.000 m³ a stagione”.
-              </div>
-              <div class="pRow"><span>Avanzamento</span><span id="kpi_save_m3_pct">—</span></div>
-              <div class="bar" title="Sarà popolato col realizzato"><div id="bar_save_m3"></div></div>
-              <div class="barMeta"><span>0</span><span>300.000</span></div>
-            </div>
-
-            <!-- KPI 2: Efficienza di trasporto (perdite) -->
-            <div class="card">
-              <div class="k">KPI PNRR – Efficienza distribuzione</div>
-              <div class="v">Perdite: 48% → ~2%</div>
-              <div class="s">
-                Baseline: perdite 48% (Tavernago-Tuna). Post-opera: perdite ~2% con condotta in PVC.
-              </div>
-              <div class="donutWrap">
-                <canvas class="donut" width="96" height="96" id="donut_losses"></canvas>
-                <div class="donutText">
-                  <div class="v" style="font-size:16px;" id="loss_text">Target: 2% perdite</div>
-                  <div class="s">Il donut mostra “perdite target” (2%) vs “utile” (98%).</div>
-                  <span class="badge">Baseline: 48% perdite</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- KPI 3: Area irrigua efficientata (ha) -->
-            <div class="card">
-              <div class="k">KPI PNRR – Area irrigua efficientata</div>
-              <div class="v" id="kpi_area_ha">7.448 ha</div>
-              <div class="s">
-                Distretto Sinistra Trebbia (considerato per intero nella relazione): 7.448 ha.
-              </div>
-              <div class="pRow"><span>Avanzamento</span><span id="kpi_area_ha_pct">—</span></div>
-              <div class="bar" title="Sarà popolato col realizzato"><div id="bar_area_ha"></div></div>
-              <div class="barMeta"><span>0</span><span>7.448</span></div>
-            </div>
-
-            <!-- KPI 4: Misuratori installati (n) -->
-            <div class="card">
-              <div class="k">KPI PNRR – Misurazione prelievi</div>
-              <div class="v" id="kpi_meters_n">n. 4 misuratori (Pievetta)</div>
-              <div class="s">
-                Misuratori di portata prelevata alla fonte Po Pievetta: n. 4.
-              </div>
-              <div class="pRow"><span>Avanzamento</span><span id="kpi_meters_n_pct">—</span></div>
-              <div class="bar" title="Sarà popolato col realizzato"><div id="bar_meters_n"></div></div>
-              <div class="barMeta"><span>0</span><span>4</span></div>
-            </div>
-
-            <!-- KPI 5: Tempo di percorrenza / flessibilità -->
-            <div class="card">
-              <div class="k">KPI PNRR – Miglioramento servizio (dinamica rete)</div>
-              <div class="v">Percorrenza: 17–20 h → 3–4 h</div>
-              <div class="s">
-                Conversione canale in terra → condotta in pressione: riduzione tempi, maggiore flessibilità e gestione da remoto.
-              </div>
-              <div class="donutWrap">
-                <canvas class="donut" width="96" height="96" id="donut_time"></canvas>
-                <div class="donutText">
-                  <div class="v" style="font-size:16px;">Target: −~80%</div>
-                  <div class="s">Indicatore “qualitativo”: tempo di percorrenza drasticamente ridotto.</div>
-                  <span class="badge">Da 17–20 h a 3–4 h</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- KPI 6: Volumi baseline canale -->
-            <div class="card">
-              <div class="k">Baseline – Volumi stagionali Tavernago-Tuna</div>
-              <div class="v">1.749.600 m³/stagione</div>
-              <div class="s">
-                Baseline: portata media ~300 l/s, servizio 67,5 gg, volume totale 1.749.600 m³; perdite 48% = 839.808 m³.
-              </div>
-              <div class="note">
-                Questo blocco serve come “baseline” per leggere il KPI risparmio idrico.
-              </div>
-            </div>
-
-          </div>
-
-          <div style="margin-top:12px" class="callout">
-            <div class="note">
-              Nota: i valori sopra sono <b>target/baseline di progetto</b> (PNRR). La scheda <b>Realizzato</b>
-              calcola automaticamente percentuali, scostamenti e trend quando i dati consuntivi sono disponibili.
-            </div>
+      <article class="card">
+        <div class="k">Efficienza distribuzione</div>
+        <div class="v">Perdite: 48% → ~2%</div>
+        <div class="s">Conversione in condotta in pressione con riduzione delle perdite di trasporto.</div>
+        <div class="donutWrap">
+          <canvas class="donut" id="donut_losses" width="88" height="88"></canvas>
+          <div class="donutText">
+            <div class="v" style="font-size:18px">Target: 2% perdite</div>
+            <span class="badge">Baseline: 48% perdite</span>
           </div>
         </div>
+      </article>
 
-        <div>
-          <div class="card">
-            <div class="k">Stato KPI (solo target)</div>
-            <div class="donutWrap">
-              <canvas class="donut" width="96" height="96" id="donut_plan"></canvas>
-              <div class="donutText">
-                <div class="v" style="font-size:16px;">Target caricati: 100%</div>
-                <div class="s">Non è “avanzamento lavori”: è completezza del modello KPI in assenza del realizzato.</div>
-                <span class="badge">Realizzato: non disponibile</span>
-              </div>
-            </div>
-            <div class="note" style="margin-top:8px;">
-              Con dati realizzati disponibili, questo donut mostra “KPI raggiunti / in corso / critici”.
-            </div>
-          </div>
+      <article class="card">
+        <div class="k">Area irrigua efficientata</div>
+        <div class="v">7.448 ha</div>
+        <div class="s">Distretto Sinistra Trebbia considerato per intero nella relazione tecnica.</div>
+        <div class="pRow"><span>Target</span><span>100%</span></div>
+        <div class="bar"><div style="width:100%"></div></div>
+        <div class="barMeta"><span>0</span><span>7.448</span></div>
+      </article>
 
-          <div class="card" style="margin-top:12px;">
-            <div class="k">Fonti tecniche (documenti)</div>
-            <div class="note">
-              • Relazione agronomica e risparmio idrico (baseline, perdite, area, volumi, benefici).<br/>
-              • Capitolato/CSA (misuratori alla fonte Pievetta, interventi).
-            </div>
+      <article class="card">
+        <div class="k">Misurazione prelievi</div>
+        <div class="v">n. 4 misuratori</div>
+        <div class="s">Misuratori di portata prelevata alla fonte Po Pievetta.</div>
+        <div class="pRow"><span>Target</span><span>100%</span></div>
+        <div class="bar"><div style="width:100%"></div></div>
+        <div class="barMeta"><span>0</span><span>4</span></div>
+      </article>
+
+      <article class="card">
+        <div class="k">Miglioramento servizio rete</div>
+        <div class="v">17–20 h → 3–4 h</div>
+        <div class="s">Riduzione del tempo di percorrenza e maggiore flessibilità gestionale.</div>
+        <div class="donutWrap">
+          <canvas class="donut" id="donut_time" width="88" height="88"></canvas>
+          <div class="donutText">
+            <div class="v" style="font-size:18px">Riduzione ~80%</div>
+            <span class="badge">Target dinamica rete</span>
           </div>
         </div>
-      </div>
+      </article>
+
+      <article class="card">
+        <div class="k">Baseline volumi Tavernago-Tuna</div>
+        <div class="v">1.749.600 m³/stagione</div>
+        <div class="s">Portata media ~300 l/s, servizio 67,5 gg, perdite baseline 48%.</div>
+      </article>
     </div>
+
+    <div class="foot">Fonti tecniche: relazione agronomica/risparmio idrico e capitolato CSA interventi.</div>
   </section>
-
-  <!-- Baseline & benefici -->
-  <section class="panel hidden" id="p-baseline" role="tabpanel" aria-labelledby="t-baseline">
-    <div class="panelHeader">
-      <div>
-        <div class="h">Baseline & benefici attesi</div>
-        <div class="hint">Contesto tecnico per interpretare i KPI (perdite, volumi, efficienza di trasporto).</div>
-      </div>
-      <div class="hint"><span class="badge">Da Relazione agronomica</span></div>
-    </div>
-    <div class="panelBody">
-      <div class="cards">
-        <div class="card">
-          <div class="k">Perdite attuali di trasporto</div>
-          <div class="v">48%</div>
-          <div class="s">Coefficiente di perdita stimato mettendo a confronto volumi immessi e consegnati.</div>
-        </div>
-        <div class="card">
-          <div class="k">Esercizio stagionale medio</div>
-          <div class="v">67,5 giorni</div>
-          <div class="s">Stima media (su 90 giorni di periodo irriguo).</div>
-        </div>
-        <div class="card">
-          <div class="k">Volume perdite baseline</div>
-          <div class="v">839.808 m³</div>
-          <div class="s">48% di 1.749.600 m³.</div>
-        </div>
-        <div class="card">
-          <div class="k">Volume consegnato baseline</div>
-          <div class="v">909.792 m³</div>
-          <div class="s">52% del volume transitante stagionale.</div>
-        </div>
-        <div class="card">
-          <div class="k">Tempo di percorrenza</div>
-          <div class="v">17–20 h</div>
-          <div class="s">Con canale in terra (12 km). Post opera: 3–4 h.</div>
-        </div>
-        <div class="card">
-          <div class="k">Beneficio PNRR chiave</div>
-          <div class="v">~300.000 m³/stagione</div>
-          <div class="s">Riduzione prelievo alla fonte grazie a maggiore efficienza (riduzione perdite).</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Misura & telecontrollo -->
-  <section class="panel hidden" id="p-meters" role="tabpanel" aria-labelledby="t-meters">
-    <div class="panelHeader">
-      <div>
-        <div class="h">Misura & telecontrollo</div>
-        <div class="hint">Indicatori PNRR legati a misurazione/monitoraggio e gestione remota.</div>
-      </div>
-      <div class="hint"><span class="badge">Target</span></div>
-    </div>
-    <div class="panelBody">
-      <div class="grid">
-        <div>
-          <div class="cards">
-            <div class="card">
-              <div class="k">Misuratori portata alla fonte</div>
-              <div class="v">n. 4</div>
-              <div class="s">Installazione misuratori al prelievo Po Pievetta.</div>
-            </div>
-            <div class="card">
-              <div class="k">Monitoraggio portate distribuite</div>
-              <div class="v">Caramello + Il Rio</div>
-              <div class="s">Misure presso stazione Caramello e vasca Il Rio (monitoraggi).</div>
-            </div>
-            <div class="card">
-              <div class="k">Gestione da remoto</div>
-              <div class="v">Telecontrollo</div>
-              <div class="s">Ammodernamento con nuove tecnologie di controllo da remoto di misure/prelievi e volumi distribuiti.</div>
-            </div>
-          </div>
-
-          <div style="margin-top:12px" class="callout">
-            <div class="note">
-              Con dati “realizzato” disponibili, in questa scheda vengono mostrati:
-              misuratori installati (n), RTU/telecontrollo attivati (n), tratte/derivazioni in telecontrollo, date collaudo.
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div class="card">
-            <div class="k">Preparazione “Realizzato”</div>
-            <div class="note">
-              Formato suggerito (anche CSV/Excel): data, misuratori installati cumulati, RTU attive cumulate, area efficientata (ha),
-              risparmio stimato (m³), note.
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  <!-- Realizzato placeholder -->
-  <section class="panel hidden" id="p-realized" role="tabpanel" aria-labelledby="t-realized">
-    <div class="panelHeader">
-      <div>
-        <div class="h">Realizzato (placeholder)</div>
-        <div class="hint">Scheda disattivata finché non arrivano i dati consuntivi.</div>
-      </div>
-    </div>
-    <div class="panelBody">
-      <div class="callout">
-        <div class="note">
-          Con il caricamento del realizzato vengono mostrati automaticamente:
-          • avanzamento vs target • serie storica • indicatori “semaforo” • export PDF.<br/>
-          Esempio formato dati: <a class="navlink" href="realizzato_esempio.json">realizzato_esempio.json</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
 </main>
 
 <script>
-  // ---------------------------
-  // CONFIG TARGET (PNRR / progetto)
-  // ---------------------------
-  // NOTA: qui lasciamo "realized" = null. Quando avrai dati, li inseriamo e calcoliamo %.
-  const KPI = {
-    save_m3: { label: "Risparmio idrico (m³/stagione)", target: 300000, realized: null },
-    area_ha: { label: "Area irrigua efficientata (ha)", target: 7448, realized: null },
-    meters_n:{ label: "Misuratori installati (n)", target: 4, realized: null },
-    // Efficienza (perdite): baseline 48%, target 2%
-    losses:  { label: "Perdite di trasporto (%)", baseline: 48, target: 2 }
-  };
-
-  // ---------------------------
-  // Tabs
-  // ---------------------------
-  const tabs = Array.from(document.querySelectorAll(".tab[role='tab']"));
-  const panels = Array.from(document.querySelectorAll("[role='tabpanel']"));
-
-  function activateTab(tabId){
-    const tab = document.getElementById(tabId);
-    if(tab.classList.contains("disabled")) return;
-
-    tabs.forEach(t=>{
-      const selected = (t.id === tabId);
-      t.setAttribute("aria-selected", selected ? "true" : "false");
-      t.tabIndex = selected ? 0 : -1;
-    });
-
-    panels.forEach(p=>{
-      p.classList.toggle("hidden", p.getAttribute("aria-labelledby") !== tabId);
-    });
-  }
-
-  tabs.forEach(t=>{
-    t.addEventListener("click", ()=> activateTab(t.id));
-    t.addEventListener("keydown", (e)=>{
-      if(e.key === "Enter" || e.key === " ") activateTab(t.id);
-    });
-  });
-
-  // ---------------------------
-  // Helpers
-  // ---------------------------
   function clamp01(x){ return Math.max(0, Math.min(1, x)); }
-
-  function setBar(barId, pct){
-    const el = document.getElementById(barId);
-    if(!el) return;
-    el.style.width = (clamp01(pct)*100).toFixed(1) + "%";
-  }
-
-  function setPctText(textId, realized, target){
-    const el = document.getElementById(textId);
-    if(!el) return;
-    if(realized === null || realized === undefined) el.textContent = "in attesa dati";
-    else el.textContent = Math.round((realized/target)*100) + "%";
-  }
-
-  // Donut drawing (monocromatico e leggibile)
-  function drawDonut(canvasId, value01){
-    const c = document.getElementById(canvasId);
+  function drawDonut(id, value){
+    const c=document.getElementById(id);
     if(!c) return;
-    const ctx = c.getContext("2d");
-    const w = c.width, h = c.height;
-    const cx = w/2, cy = h/2;
-    const r = Math.min(w,h)/2 - 8;
-    const t = 12;
+    const ctx=c.getContext('2d');
+    const w=c.width, h=c.height;
+    const cx=w/2, cy=h/2;
+    const r=Math.min(w,h)/2-8;
+    const t=10;
     ctx.clearRect(0,0,w,h);
-
-    // track
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, Math.PI*2);
-    ctx.strokeStyle = "#efefef";
-    ctx.lineWidth = t;
-    ctx.stroke();
-
-    // value
-    const start = -Math.PI/2;
-    const end = start + Math.PI*2*clamp01(value01);
-    ctx.beginPath();
-    ctx.arc(cx, cy, r, start, end);
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = t;
-    ctx.lineCap = "round";
-    ctx.stroke();
-
-    // label %
-    ctx.fillStyle = "#111";
-    ctx.font = "bold 16px Arial";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(Math.round(clamp01(value01)*100) + "%", cx, cy);
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.strokeStyle='#eceff4'; ctx.lineWidth=t; ctx.stroke();
+    const start=-Math.PI/2; const end=start+Math.PI*2*clamp01(value);
+    ctx.beginPath(); ctx.arc(cx,cy,r,start,end); ctx.strokeStyle='#111'; ctx.lineWidth=t; ctx.lineCap='round'; ctx.stroke();
+    ctx.fillStyle='#111'; ctx.font='bold 14px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(Math.round(value*100)+'%',cx,cy);
   }
-
-  // ---------------------------
-  // Render initial (solo target)
-  // ---------------------------
-  // Progress bars remain 0 until realized arrives
-  setPctText("kpi_save_m3_pct", KPI.save_m3.realized, KPI.save_m3.target);
-  setPctText("kpi_area_ha_pct", KPI.area_ha.realized, KPI.area_ha.target);
-  setPctText("kpi_meters_n_pct", KPI.meters_n.realized, KPI.meters_n.target);
-
-  setBar("bar_save_m3", KPI.save_m3.realized ? (KPI.save_m3.realized/KPI.save_m3.target) : 0);
-  setBar("bar_area_ha", KPI.area_ha.realized ? (KPI.area_ha.realized/KPI.area_ha.target) : 0);
-  setBar("bar_meters_n", KPI.meters_n.realized ? (KPI.meters_n.realized/KPI.meters_n.target) : 0);
-
-  // Donut: target losses = 2% => show "utile" 98% (value01 = 0.98)
-  drawDonut("donut_losses", 1 - (KPI.losses.target/100));
-
-  // Donut: time reduction ~80% (17–20 -> 3–4). We show 80% as indicative.
-  drawDonut("donut_time", 0.80);
-
-  // Donut: completeness of targets loaded (not progress)
-  drawDonut("donut_plan", 1.00);
+  drawDonut('donut_losses',0.98);
+  drawDonut('donut_time',0.80);
 </script>
 </body>
 </html>
