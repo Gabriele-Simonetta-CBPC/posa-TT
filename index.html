@@ -145,6 +145,31 @@
   .line-legend .sample{ width:28px; height:0; border-top:3px solid #333; }
   .line-legend .sample.dashed{ border-top-style:dashed; }
 
+  .special-legend{
+    background:#fff;
+    border:1px solid #d9d9d9;
+    border-radius:10px;
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+    padding:8px 10px;
+    font-size:12px;
+    color:#111;
+    line-height:1.35;
+    margin-top:8px;
+  }
+  .special-legend .title{ font-weight:700; margin-bottom:4px; }
+  .special-legend .item{ display:flex; align-items:center; gap:8px; margin:2px 0; }
+  .special-legend .sym{ width:12px; height:12px; border:2px solid #222; box-sizing:border-box; }
+  .special-legend .circle{ border-radius:50%; }
+  .special-legend .square{ border-radius:2px; }
+  .special-legend .diamond{ border-radius:2px; transform:rotate(45deg); }
+  .special-legend .posato{ background:rgba(255,255,255,.35); border-style:dashed; }
+  .special-legend .pieno{ background:#222; }
+
+  .special-marker{ box-sizing:border-box; }
+  .special-marker.circle{ border-radius:50%; }
+  .special-marker.square{ border-radius:2px; }
+  .special-marker.diamond{ border-radius:2px; transform:rotate(45deg); }
+
   @media (max-width:720px){
     .logos img{ height:34px; }
     .overlay{ top:182px; left:14px; right:14px; width:auto; }
@@ -218,9 +243,14 @@
   const REPO_BASE = location.hostname.endsWith("github.io") ? "/posa-TT/" : "/";
   const FILE_TRONCHI = new URL("tronchi.geojson", location.origin + REPO_BASE).toString();
   const FILE_AVANZ   = new URL("avanzamento.json", location.origin + REPO_BASE).toString();
+  const FILE_PEZZI   = new URL("pezzi speciali.geojson", location.origin + REPO_BASE).toString();
 
   // Se il 100% ti va nel verso sbagliato, lascia true
   const REVERSE_PROGRESS = true;
+
+  const PIPE_DIAMETER_M = 0.63;
+  const SPECIAL_LONG_M = 3;
+  const SPECIAL_SHORT_M = 1.5;
 
   // Ordine richiesto tabella + legenda colori
   const TRONCHI_ORDER = ["PV","1","2","3-1","3-2","4","5"];
@@ -318,6 +348,26 @@
   });
   map.addControl(new LineLegend());
 
+  const SpecialLegend = L.Control.extend({
+    options: { position: "bottomleft" },
+    onAdd: function(){
+      const div = L.DomUtil.create("div", "special-legend");
+      div.innerHTML = `
+        <div class="title">Pezzi speciali (curva_tipo_posato)</div>
+        <div class="item"><span class="sym circle pieno"></span><span>Tipo 1 = Innesto</span></div>
+        <div class="item"><span class="sym square pieno"></span><span>Tipo 2 = Derivazione</span></div>
+        <div class="item"><span class="sym diamond pieno"></span><span>Tipo 3 = Sezionamento</span></div>
+        <div class="item"><span class="sym circle pieno"></span><span>Senza tipo (curve): simbolo tondo</span></div>
+        <div class="item"><span class="sym circle posato"></span><span>Posato = tratteggio/semitrasparente</span></div>
+        <div class="item"><span class="sym circle pieno"></span><span>Non posato = pieno</span></div>
+      `;
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      return div;
+    }
+  });
+  map.addControl(new SpecialLegend());
+
   // ===== Helpers =====
   const getTroncoId = (p) => p?.tronco ?? p?.Tronco ?? p?.TRONCO ?? null;
   const getDitta    = (p) => p?.ditta ?? p?.Ditta ?? p?.DITTA ?? "";
@@ -358,6 +408,102 @@
       return { ...f, geometry:{ type:"MultiLineString", coordinates: parts } };
     }
     return null;
+  }
+
+  function normalizeCurva(p){
+    const raw = p?.curva ?? p?.Curva ?? p?.CURVA;
+    if(raw === null || raw === undefined || raw === "") return "0";
+    return String(raw);
+  }
+  function normalizeTipo(p){
+    const raw = p?.tipo ?? p?.Tipo ?? p?.TIPO;
+    if(raw === null || raw === undefined || raw === "" || String(raw).toLowerCase() === "none") return "";
+    return String(raw);
+  }
+  function normalizePosato(p){
+    const raw = p?.posato ?? p?.Posato ?? p?.POSATO;
+    if(raw === true) return true;
+    if(raw === false || raw === null || raw === undefined) return false;
+    const s = String(raw).toLowerCase();
+    return s === "true" || s === "1" || s === "si" || s === "sì";
+  }
+
+  function colorByCurva(curva){
+    const by = {
+      "0": "#1f3fbf",
+      "30": "#d61ab1",
+      "45": "#b012c7",
+      "60": "#6f2fc9",
+      "90": "#1637c9"
+    };
+    return by[curva] || "#1f3fbf";
+  }
+  function shapeByTipo(tipo, curva){
+    if(tipo === "1") return "circle";
+    if(tipo === "2") return "square";
+    if(tipo === "3") return "diamond";
+    return "circle";
+  }
+  function tipoLabel(tipo){
+    if(tipo === "1") return "Innesto";
+    if(tipo === "2") return "Derivazione";
+    if(tipo === "3") return "Sezionamento";
+    return "—";
+  }
+
+  const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+  function metersPerPixel(lat, zoom){
+    const latRad = (lat * Math.PI) / 180;
+    return 156543.03392 * Math.cos(latRad) / Math.pow(2, zoom);
+  }
+  function pipeWeightPx(lat){
+    const px = (PIPE_DIAMETER_M / metersPerPixel(lat, map.getZoom())) * 2.8;
+    return clamp(px, 2.25, 6);
+  }
+  function specialSizePx(lat){
+    const mpp = metersPerPixel(lat, map.getZoom());
+    return {
+      long: clamp((SPECIAL_LONG_M / mpp) * 2.2, 8, 22),
+      short: clamp((SPECIAL_SHORT_M / mpp) * 2.2, 5, 14)
+    };
+  }
+
+  function buildSpecialIcon(feature, latlng){
+    const p = feature?.properties || {};
+    const curva = normalizeCurva(p);
+    const tipo = normalizeTipo(p);
+    const posato = normalizePosato(p);
+
+    const shape = shapeByTipo(tipo, curva);
+    const color = colorByCurva(curva);
+    const lat = latlng?.lat ?? map.getCenter().lat;
+    const sz = specialSizePx(lat);
+
+    let w = sz.short;
+    let h = sz.short;
+    if(shape === "square"){
+      w = sz.long;
+      h = sz.short;
+    }
+
+    const borderW = Math.max(1.5, sz.short * 0.17);
+    const fillAlpha = posato ? 0.45 : 0.95;
+    const rgb = [parseInt(color.slice(1,3),16), parseInt(color.slice(3,5),16), parseInt(color.slice(5,7),16)];
+    const bg = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${fillAlpha})`;
+    const html = `<div class="special-marker ${shape}" style="width:${w.toFixed(1)}px; height:${h.toFixed(1)}px; border:${borderW.toFixed(1)}px ${posato ? "dashed" : "solid"} ${color}; background:${bg};"></div>`;
+
+    return {
+      icon: L.divIcon({
+        className: "",
+        html,
+        iconSize: [w + borderW * 2, h + borderW * 2],
+        iconAnchor: [(w + borderW * 2)/2, (h + borderW * 2)/2]
+      }),
+      key: `${curva}_${tipo || "0"}_${posato ? "1" : "0"}`,
+      curva,
+      tipo,
+      posato
+    };
   }
 
   // Punto avanzamento
@@ -412,6 +558,8 @@
   let baseDate = "";
   let baseMap = {};
   let compact = false;
+  const lineLayers = [];
+  const specialMarkers = [];
 
   function updateCompactLayout(){
     overlay.classList.toggle("compact", compact);
@@ -422,6 +570,8 @@
   function clearLayers(){
     Object.values(layersByTronco).forEach(arr => arr.forEach(l => map.removeLayer(l)));
     Object.keys(layersByTronco).forEach(k => delete layersByTronco[k]);
+    lineLayers.length = 0;
+    specialMarkers.length = 0;
   }
 
   // ===== UI: Compress / Expand =====
@@ -512,7 +662,7 @@
     // Mappa: mostra solo tronchi filtrati
     const visibleIds = new Set(filtered.map(r => r.id));
     Object.entries(layersByTronco).forEach(([id, arr]) => {
-      const show = visibleIds.has(id);
+      const show = id === "__pezzi_speciali__" ? true : visibleIds.has(id);
       arr.forEach(layer => {
         if(show){
           if(!map.hasLayer(layer)) layer.addTo(map);
@@ -531,14 +681,33 @@
     applyFilters();
   });
 
+  function updateScaleStyles(){
+    const lat = map.getCenter().lat;
+    const weight = pipeWeightPx(lat);
+
+    lineLayers.forEach(({ layer, color, posato }) => {
+      layer.setStyle({
+        color,
+        weight,
+        opacity: posato ? 0.92 : 1,
+        dashArray: posato ? "10 8" : null
+      });
+    });
+
+    specialMarkers.forEach(({ marker, feature }) => {
+      marker.setIcon(buildSpecialIcon(feature, marker.getLatLng()).icon);
+    });
+  }
+
   // ===== Load =====
   setStatus("caricamento…");
 
   Promise.all([
     fetch(FILE_TRONCHI + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("tronchi.geojson HTTP " + r.status); return r.json(); }),
-    fetch(FILE_AVANZ   + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("avanzamento.json HTTP " + r.status); return r.json(); })
+    fetch(FILE_AVANZ   + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("avanzamento.json HTTP " + r.status); return r.json(); }),
+    fetch(FILE_PEZZI   + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("pezzi speciali.geojson HTTP " + r.status); return r.json(); })
   ])
-  .then(([geo, avanz]) => {
+  .then(([geo, avanz, pezzi]) => {
 
     setStatus("dati caricati");
     setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON"));
@@ -591,16 +760,18 @@
       // residuo pieno (da fare)
       if(segResiduo){
         const layerResiduo = L.geoJSON(segResiduo, {
-          style: { color: col, weight: 5, opacity: 1 }
+          style: { color: col, weight: pipeWeightPx(map.getCenter().lat), opacity: 1 }
         }).addTo(map);
+        lineLayers.push({ layer: layerResiduo, color: col, posato: false });
         layersByTronco[id].push(layerResiduo);
       }
 
       // posato tratteggiato
       if(segPosato){
         const layerPosato = L.geoJSON(segPosato, {
-          style: { color: col, weight: 5, opacity: 1, dashArray: "10 8" }
+          style: { color: col, weight: pipeWeightPx(map.getCenter().lat), opacity: 0.92, dashArray: "10 8" }
         }).addTo(map);
+        lineLayers.push({ layer: layerPosato, color: col, posato: true });
         layersByTronco[id].push(layerPosato);
       }
 
@@ -609,7 +780,7 @@
       if(res.ok && res.point){
         const [lng, lat] = res.point.geometry.coordinates;
         const p = L.circleMarker([lat, lng], {
-          radius: 7, color: col, fillColor: col, fillOpacity: 1
+          radius: 5, weight: 1, color: col, fillColor: col, fillOpacity: 1
         }).bindPopup(`
           <b>Tronco ${id}</b><br>
           ${ditta ? `<i>${ditta}</i><br>` : ""}
@@ -620,10 +791,30 @@
       }
     });
 
+    const pezziLayer = L.geoJSON(pezzi, {
+      filter: (feature) => feature?.geometry?.type === "Point",
+      pointToLayer: (feature, latlng) => {
+        const sym = buildSpecialIcon(feature, latlng);
+        const marker = L.marker(latlng, { icon: sym.icon }).bindPopup(`
+          <b>Pezzo speciale</b><br>
+          Tronco: ${feature?.properties?.tronco ?? ""}<br>
+          Curva: ${sym.curva}&deg;<br>
+          Tipo: ${sym.tipo ? `${sym.tipo} - ${tipoLabel(sym.tipo)}` : "—"}<br>
+          Posato: ${sym.posato ? "Sì" : "No"}<br>
+          Chiave: ${sym.key}
+        `);
+        specialMarkers.push({ marker, feature });
+        return marker;
+      }
+    }).addTo(map);
+    layersByTronco["__pezzi_speciali__"] = [pezziLayer];
+
     // filters + first render
     updateCompactLayout();
     buildFilters();
     applyFilters();
+    updateScaleStyles();
+    map.on("zoomend", updateScaleStyles);
   })
   .catch(err => {
     console.error(err);
