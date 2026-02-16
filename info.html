@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Avanzamento posa condotta – Scheda informativa</title>
-
-  <link rel="icon" href="data:," />
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>PNRR M2C4 – KPI Irrigazione | Schema irriguo Tidone</title>
+  <link rel="icon" href="data:,"/>
 
   <style>
     :root{
@@ -14,557 +13,527 @@
       --muted:#666;
       --panel:#fff;
       --border:#ddd;
-      --shadow: 0 8px 28px rgba(0,0,0,.12);
+      --shadow: 0 10px 30px rgba(0,0,0,.10);
       --shadow2: 0 6px 16px rgba(0,0,0,.08);
-      --accent:#111;
       --soft:#f7f7f7;
+      --accent:#111;
+      --radius:16px;
     }
-
     *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: Arial, sans-serif;
-      color:var(--fg);
-      background:var(--bg);
-      min-height:100vh;
-      display:flex;
-      flex-direction:column;
-    }
-
+    body{ margin:0; font-family: Arial, sans-serif; background:var(--bg); color:var(--fg); }
     header{
-      padding:10px 14px;
-      border-bottom:1px solid var(--border);
-      background:#fff;
+      position:sticky; top:0; z-index:20;
+      background:#fff; border-bottom:1px solid var(--border);
+      padding:12px 14px;
     }
-
-    .topline{
-      display:flex;
-      gap:12px;
-      align-items:flex-start;
-      justify-content:space-between;
-      flex-wrap:wrap;
-    }
-
-    .title{
-      max-width: 1200px;
-      line-height: 1.25;
-      font-size: 14px;
-    }
-    .title b{
-      font-size: 16px;
-      display:block;
-      margin-bottom:4px;
-    }
-    .meta{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      margin-top:8px;
-      color:var(--muted);
-      font-size:12px;
-    }
-    .pill{
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:4px 10px;
-      background:var(--soft);
-    }
-    .navlink{
-      color:#111;
-      text-decoration:none;
-      font-weight:600;
-    }
+    .top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .title{ line-height:1.25; max-width:1100px; }
+    .title b{ display:block; font-size:16px; margin-bottom:4px; }
+    .subtitle{ font-size:13px; color:#222; }
+    .meta{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:var(--muted); }
+    .pill{ border:1px solid var(--border); background:var(--soft); padding:4px 10px; border-radius:999px; }
+    .navlink{ color:#111; text-decoration:none; font-weight:600; }
     .navlink:hover{ background:#efefef; }
+    .actions{ display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end; align-items:center; }
+    button{
+      border:1px solid var(--border); background:#fff;
+      border-radius:12px; padding:8px 10px;
+      font-size:12px; cursor:pointer;
+      box-shadow:var(--shadow2);
+    }
+    button:hover{ background:#f5f5f5; }
+    button.primary{ border-color:#111; background:#111; color:#fff; box-shadow:none; }
+    button.primary:hover{ filter:brightness(.95); }
 
-    .logos{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .logos img{
-      height:42px;
-      width:auto;
-      object-fit:contain;
-      border:1px solid #eee;
-      border-radius:10px;
-      padding:6px 8px;
-      background:#fff;
-    }
+    main{ padding:14px; max-width: 1280px; margin: 0 auto; }
 
-    main{
-      padding:14px;
-      display:grid;
-      grid-template-columns: 1.2fr .8fr;
-      gap:14px;
-      align-items:start;
+    /* Tabs */
+    .tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+    .tab{
+      border:1px solid var(--border); background:#fff;
+      padding:10px 12px; border-radius:999px;
+      font-size:12px; cursor:pointer;
+      box-shadow:var(--shadow2); user-select:none;
     }
+    .tab[aria-selected="true"]{ background:#111; color:#fff; border-color:#111; box-shadow:none; }
+    .tab.disabled{ opacity:.55; cursor:not-allowed; }
 
     .panel{
       background:var(--panel);
       border:1px solid var(--border);
-      border-radius:14px;
+      border-radius:var(--radius);
       box-shadow:var(--shadow);
       overflow:hidden;
     }
+    .panelHeader{
+      padding:12px 14px; border-bottom:1px solid var(--border);
+      background:#fafafa; display:flex;
+      align-items:flex-end; justify-content:space-between;
+      gap:10px; flex-wrap:wrap;
+    }
+    .panelHeader .h{ font-weight:700; font-size:13px; }
+    .panelHeader .hint{ font-size:12px; color:var(--muted); }
+    .panelBody{ padding:14px; }
 
-    .panel-header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      padding:10px 12px;
-      border-bottom:1px solid var(--border);
-      background:#fafafa;
-      flex-wrap:wrap;
-    }
-    .panel-header .h{
-      font-weight:700;
-      font-size:13px;
-    }
-    .panel-body{
-      padding:12px;
-      background:#fff;
-    }
+    .grid{ display:grid; grid-template-columns: 1.15fr .85fr; gap:12px; align-items:start; }
+    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
 
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
+    .cards{ display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px; }
+    @media (max-width: 980px){ .cards{ grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    @media (max-width: 640px){ .cards{ grid-template-columns: 1fr; } }
 
-    .kpi{
-      border:1px solid #eee;
-      border-radius:12px;
-      padding:10px 12px;
-      background:#fff;
-      box-shadow:var(--shadow2);
+    .card{
+      border:1px solid #eee; border-radius:14px;
+      background:#fff; box-shadow:var(--shadow2);
+      padding:12px; display:flex; flex-direction:column; gap:10px;
     }
-    .kpi .k{
-      font-size:11px;
-      color:var(--muted);
-      margin-bottom:6px;
+    .k{ font-size:11px; color:var(--muted); }
+    .v{ font-weight:700; font-size:18px; letter-spacing:.2px; }
+    .s{ font-size:12px; color:var(--muted); line-height:1.4; }
+
+    /* KPI progress */
+    .pRow{ display:flex; justify-content:space-between; gap:8px; font-size:12px; color:#222; }
+    .bar{
+      width:100%; height:10px; background:#efefef;
+      border-radius:999px; overflow:hidden; border:1px solid #e6e6e6;
     }
-    .kpi .v{
-      font-size:16px;
-      font-weight:700;
-      letter-spacing:.2px;
+    .bar > div{ height:100%; width:0%; background:#111; }
+    .barMeta{ display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:6px; }
+
+    /* Donut */
+    .donutWrap{ display:flex; gap:12px; align-items:center; }
+    canvas.donut{
+      width:96px; height:96px; border-radius:999px;
+      background:#fff; border:1px solid #eee; box-shadow:var(--shadow2);
     }
-    .kpi .s{
-      margin-top:6px;
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.35;
+    .donutText{ display:flex; flex-direction:column; gap:6px; }
+    .badge{
+      display:inline-block; border:1px solid var(--border);
+      background:var(--soft); padding:3px 8px;
+      border-radius:999px; font-size:11px; color:#333; width:max-content;
     }
 
-    .note{
-      font-size:12px;
-      color:var(--muted);
-      line-height:1.5;
-    }
+    .callout{ border:1px dashed #d9d9d9; background:#fcfcfc; border-radius:14px; padding:12px; }
+    .note{ font-size:12px; color:var(--muted); line-height:1.55; }
+    .hidden{ display:none !important; }
 
-    table{
-      width:100%;
-      border-collapse:collapse;
-      font-size:12px;
+    /* Tables */
+    .tableWrap{
+      border:1px solid #eee; border-radius:14px;
+      overflow:auto; box-shadow:var(--shadow2); background:#fff;
     }
-    th, td{
-      padding:8px 8px;
-      border-bottom:1px solid #eee;
-      text-align:right;
-      white-space:nowrap;
-      vertical-align:top;
-    }
-    th{
-      position:sticky;
-      top:0;
-      background:#fff;
-      z-index:1;
-      border-bottom:1px solid var(--border);
-      font-weight:700;
-    }
-    td:first-child, th:first-child{ text-align:left; white-space:normal; }
-    .small{ font-size:11px; color:var(--muted); }
-    .tag{
-      display:inline-block;
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:999px;
-      padding:2px 8px;
-      font-size:11px;
-      color:#333;
-      margin-right:6px;
-      margin-bottom:6px;
-    }
-
-    details{
-      border:1px solid #eee;
-      border-radius:12px;
-      padding:10px 12px;
-      margin:10px 0;
-      background:#fff;
-      box-shadow:var(--shadow2);
-    }
-    summary{
-      cursor:pointer;
-      font-weight:700;
-      font-size:12px;
-      list-style:none;
-    }
-    summary::-webkit-details-marker{ display:none; }
-
-    .list{
-      margin:10px 0 0;
-      padding-left:18px;
-      color:#222;
-      font-size:12px;
-      line-height:1.55;
-    }
-    .list li{ margin:6px 0; }
-
-    .btnrow{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    button{
-      border:1px solid var(--border);
-      background:#fff;
-      border-radius:10px;
-      padding:6px 10px;
-      font-size:12px;
-      cursor:pointer;
-    }
-    button:hover{ background:#f5f5f5; }
-    button.primary{
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
-    button.primary:hover{ filter:brightness(.95); }
-
-    @media (max-width: 980px){
-      main{ grid-template-columns: 1fr; }
-    }
-    @media (max-width: 720px){
-      .logos img{ height:34px; }
-      .grid2{ grid-template-columns: 1fr; }
-    }
+    table{ border-collapse:collapse; width:100%; font-size:12px; min-width: 680px; }
+    th, td{ padding:10px 10px; border-bottom:1px solid #eee; text-align:right; vertical-align:top; white-space:nowrap; }
+    th{ font-weight:700; background:#fff; position:sticky; top:0; z-index:1; border-bottom:1px solid var(--border); }
+    th:first-child, td:first-child{ text-align:left; white-space:normal; min-width: 260px; }
 
     @media print{
-      header{ position:sticky; top:0; }
-      main{ display:block; }
+      header{ position:static; }
+      .tabs, .actions{ display:none; }
       .panel{ box-shadow:none; }
-      .kpi, details{ box-shadow:none; }
-      button{ display:none; }
     }
   </style>
 </head>
 
 <body>
 <header>
-  <div class="topline">
+  <div class="top">
     <div class="title">
-      <b>Schema irriguo Tidone – Scheda informativa</b>
-      Intervento: adeguamenti funzionali del sistema di adduzione in sponda sinistra e destra Tidone (tronchi: 1) Bruso–Il Rio; 2) Tavernago–Tuna → Lago delle Lische; 3) Lago delle Lische → Tuna). Localizzazione: Borgonovo V.T., Agazzano, Gragnano T.se, Gazzola, Castel San Giovanni (PC). CUP <b>G99J21006930005</b>.
+      <b>PNRR M2C4 – Investimento 4.3 | KPI di progetto</b>
+      <div class="subtitle">
+        Schema irriguo Tidone – Risparmio idrico, efficientamento rete, misurazione e telecontrollo. CUP <b>G99J21006930005</b>.
+      </div>
       <div class="meta">
-        <span class="pill" id="status">documento sintetico</span>
-        <span class="pill" id="updated">dati: Progetto 2021 + Revisione prezzi 2022</span>
-        <span class="pill" id="baseline">COD. LOC: 00094</span>
-        <a class="pill navlink" href="index.html">Apri mappa avanzamento</a>
+        <span class="pill">Target da Relazione agronomica / risparmio idrico</span>
+        <span class="pill">Misuratori fonte Pievetta: n. 4</span>
+        <span class="pill">Realizzato: da caricare (scheda dedicata)</span>
+        <a class="pill navlink" href="index.html">Mappa avanzamento</a>
+        <a class="pill navlink" href="forniture.html">Forniture</a>
       </div>
     </div>
-
-    <div class="logos" aria-label="Loghi (opzionali)">
-      <!-- opzionale: come nel tuo template. Metti i file in assets/ -->
-      <img src="assets/italiadomani.png" alt="Italia Domani (opzionale)">
-      <img src="assets/masaf.png" alt="MASAF (opzionale)">
-      <img src="assets/nextgenerationeu.png" alt="NextGenerationEU (opzionale)">
-      <img src="assets/consorzio.png" alt="Consorzio (opzionale)">
+    <div class="actions">
+      <button class="primary" onclick="window.print()">Stampa / PDF</button>
     </div>
   </div>
 </header>
 
 <main>
-  <!-- COLONNA SX: descrizione + interventi -->
-  <section class="panel">
-    <div class="panel-header">
-      <div class="h">Quadro generale</div>
-      <div class="btnrow">
-        <button id="btnExpand">Espandi tutto</button>
-        <button id="btnCollapse">Comprimi tutto</button>
-        <button class="primary" onclick="window.print()">Stampa / PDF</button>
+  <!-- Tabs -->
+  <div class="tabs" role="tablist" aria-label="Schede dashboard">
+    <div class="tab" role="tab" id="t-pnrr" aria-selected="true" aria-controls="p-pnrr" tabindex="0">KPI PNRR</div>
+    <div class="tab" role="tab" id="t-baseline" aria-selected="false" aria-controls="p-baseline" tabindex="-1">Baseline & benefici</div>
+    <div class="tab" role="tab" id="t-meters" aria-selected="false" aria-controls="p-meters" tabindex="-1">Misura & telecontrollo</div>
+    <div class="tab disabled" role="tab" id="t-realized" aria-selected="false" aria-controls="p-realized" tabindex="-1" aria-disabled="true">Realizzato (da caricare)</div>
+  </div>
+
+  <!-- KPI PNRR -->
+  <section class="panel" id="p-pnrr" role="tabpanel" aria-labelledby="t-pnrr">
+    <div class="panelHeader">
+      <div>
+        <div class="h">KPI PNRR – Target di progetto</div>
+        <div class="hint">Grafici impostati sui target (il confronto con il “realizzato” si attiva con dati consuntivi caricati).</div>
       </div>
+      <div class="hint"><span class="badge">Stato: “Solo target”</span></div>
     </div>
-    <div class="panel-body">
-      <div class="grid2">
-        <div class="kpi">
-          <div class="k">Importo complessivo (progetto 2021)</div>
-          <div class="v">€ 6.600.000,00</div>
-          <div class="s small">Progetto esecutivo (PE).</div>
-        </div>
-        <div class="kpi">
-          <div class="k">Importo complessivo (revisione prezzi 2022)</div>
-          <div class="v">€ 7.526.380,00</div>
-          <div class="s small">Differenza da finanziare indicata: € 926.380,00.</div>
+
+    <div class="panelBody">
+      <div class="grid">
+        <div>
+          <div class="cards">
+
+            <!-- KPI 1: Risparmio idrico (m³/stagione) -->
+            <div class="card">
+              <div class="k">KPI PNRR – Risparmio risorsa irrigua</div>
+              <div class="v" id="kpi_save_m3">300.000 m³/stagione</div>
+              <div class="s">
+                Atteso: riduzione prelievo alla fonte “per circa 300.000 m³ a stagione”.
+              </div>
+              <div class="pRow"><span>Avanzamento</span><span id="kpi_save_m3_pct">—</span></div>
+              <div class="bar" title="Sarà popolato col realizzato"><div id="bar_save_m3"></div></div>
+              <div class="barMeta"><span>0</span><span>300.000</span></div>
+            </div>
+
+            <!-- KPI 2: Efficienza di trasporto (perdite) -->
+            <div class="card">
+              <div class="k">KPI PNRR – Efficienza distribuzione</div>
+              <div class="v">Perdite: 48% → ~2%</div>
+              <div class="s">
+                Baseline: perdite 48% (Tavernago-Tuna). Post-opera: perdite ~2% con condotta in PVC.
+              </div>
+              <div class="donutWrap">
+                <canvas class="donut" width="96" height="96" id="donut_losses"></canvas>
+                <div class="donutText">
+                  <div class="v" style="font-size:16px;" id="loss_text">Target: 2% perdite</div>
+                  <div class="s">Il donut mostra “perdite target” (2%) vs “utile” (98%).</div>
+                  <span class="badge">Baseline: 48% perdite</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- KPI 3: Area irrigua efficientata (ha) -->
+            <div class="card">
+              <div class="k">KPI PNRR – Area irrigua efficientata</div>
+              <div class="v" id="kpi_area_ha">7.448 ha</div>
+              <div class="s">
+                Distretto Sinistra Trebbia (considerato per intero nella relazione): 7.448 ha.
+              </div>
+              <div class="pRow"><span>Avanzamento</span><span id="kpi_area_ha_pct">—</span></div>
+              <div class="bar" title="Sarà popolato col realizzato"><div id="bar_area_ha"></div></div>
+              <div class="barMeta"><span>0</span><span>7.448</span></div>
+            </div>
+
+            <!-- KPI 4: Misuratori installati (n) -->
+            <div class="card">
+              <div class="k">KPI PNRR – Misurazione prelievi</div>
+              <div class="v" id="kpi_meters_n">n. 4 misuratori (Pievetta)</div>
+              <div class="s">
+                Misuratori di portata prelevata alla fonte Po Pievetta: n. 4.
+              </div>
+              <div class="pRow"><span>Avanzamento</span><span id="kpi_meters_n_pct">—</span></div>
+              <div class="bar" title="Sarà popolato col realizzato"><div id="bar_meters_n"></div></div>
+              <div class="barMeta"><span>0</span><span>4</span></div>
+            </div>
+
+            <!-- KPI 5: Tempo di percorrenza / flessibilità -->
+            <div class="card">
+              <div class="k">KPI PNRR – Miglioramento servizio (dinamica rete)</div>
+              <div class="v">Percorrenza: 17–20 h → 3–4 h</div>
+              <div class="s">
+                Conversione canale in terra → condotta in pressione: riduzione tempi, maggiore flessibilità e gestione da remoto.
+              </div>
+              <div class="donutWrap">
+                <canvas class="donut" width="96" height="96" id="donut_time"></canvas>
+                <div class="donutText">
+                  <div class="v" style="font-size:16px;">Target: −~80%</div>
+                  <div class="s">Indicatore “qualitativo”: tempo di percorrenza drasticamente ridotto.</div>
+                  <span class="badge">Da 17–20 h a 3–4 h</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- KPI 6: Volumi baseline canale -->
+            <div class="card">
+              <div class="k">Baseline – Volumi stagionali Tavernago-Tuna</div>
+              <div class="v">1.749.600 m³/stagione</div>
+              <div class="s">
+                Baseline: portata media ~300 l/s, servizio 67,5 gg, volume totale 1.749.600 m³; perdite 48% = 839.808 m³.
+              </div>
+              <div class="note">
+                Questo blocco serve come “baseline” per leggere il KPI risparmio idrico.
+              </div>
+            </div>
+
+          </div>
+
+          <div style="margin-top:12px" class="callout">
+            <div class="note">
+              Nota: i valori sopra sono <b>target/baseline di progetto</b> (PNRR). La scheda <b>Realizzato</b>
+              calcola automaticamente percentuali, scostamenti e trend quando i dati consuntivi sono disponibili.
+            </div>
+          </div>
         </div>
 
-        <div class="kpi">
-          <div class="k">Forniture in appalto (totale)</div>
-          <div class="v">€ 4.158.143,00</div>
-          <div class="s small">Ripartizione per “Opere generali” e Tronchi 1–4 nel QE.</div>
-        </div>
-        <div class="kpi">
-          <div class="k">Servizi in appalto (totale)</div>
-          <div class="v">€ 365.062,21</div>
-          <div class="s small">Bonifica amianto Tronco 1 + oneri sicurezza.</div>
+        <div>
+          <div class="card">
+            <div class="k">Stato KPI (solo target)</div>
+            <div class="donutWrap">
+              <canvas class="donut" width="96" height="96" id="donut_plan"></canvas>
+              <div class="donutText">
+                <div class="v" style="font-size:16px;">Target caricati: 100%</div>
+                <div class="s">Non è “avanzamento lavori”: è completezza del modello KPI in assenza del realizzato.</div>
+                <span class="badge">Realizzato: non disponibile</span>
+              </div>
+            </div>
+            <div class="note" style="margin-top:8px;">
+              Con dati realizzati disponibili, questo donut mostra “KPI raggiunti / in corso / critici”.
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px;">
+            <div class="k">Fonti tecniche (documenti)</div>
+            <div class="note">
+              • Relazione agronomica e risparmio idrico (baseline, perdite, area, volumi, benefici).<br/>
+              • Capitolato/CSA (misuratori alla fonte Pievetta, interventi).
+            </div>
+          </div>
         </div>
       </div>
-
-      <p class="note" style="margin:12px 0 0;">
-        Il progetto è impostato con contratti di <b>fornitura</b> (tubazioni PVC, pezzi speciali, elettropompe, TLC/RTU, ecc.)
-        e un contratto di <b>servizi</b> per la bonifica di tubazioni in cemento contenente amianto; le lavorazioni di posa risultano previste
-        con mezzi/personale del Consorzio.
-      </p>
-
-      <details open>
-        <summary>Obiettivi e criteri dell’intervento</summary>
-        <ul class="list">
-          <li>Miglioramento misurazione prelievi (misuratori + telecontrollo) alla fonte “Pievetta”.</li>
-          <li>Adeguamento normativo: sostituzione condotta in cemento amianto con tubazione in PVC di diametro adeguato.</li>
-          <li>Risparmio risorsa: “copertura” del canale in terra Tavernago–Tuna con condotta in pressione in PVC.</li>
-          <li>Risparmio energetico: ammodernamento elettropompe (stazioni RDB e Bruso).</li>
-        </ul>
-      </details>
-
-      <details>
-        <summary>Interventi principali (parte generale – Pievetta)</summary>
-        <div style="margin-top:10px;">
-          <span class="tag">Telecontrollo</span>
-          <span class="tag">Misuratori portata</span>
-          <span class="tag">Layflat 9.500 m</span>
-        </div>
-        <ul class="list">
-          <li>Adeguamento sistema centrale di telecontrollo per ricevere i nodi TLC/RTU.</li>
-          <li>Misuratori di portata prelevata alla fonte Po Pievetta: <b>n. 4</b>.</li>
-          <li>Misuratori presso stazione Caramello e vasca Il Rio per monitoraggio portate distribuite.</li>
-          <li>Tubazione mobile Layflat: <b>9.500 m</b>, diametro interno 207 mm (8”).</li>
-        </ul>
-      </details>
-
-      <details>
-        <summary>Interventi per tronco (sintesi tecnica)</summary>
-
-        <details>
-          <summary>Tronco 1 – Bruso → vasca Il Rio</summary>
-          <ul class="list">
-            <li>Bonifica tubazioni in cemento amianto: <b>2.164 m</b>, <b>DN 400</b> (prelievo, marcatura e conferimento).</li>
-            <li>Sostituzione con tubazione PVC: <b>2.164 m</b>, <b>DN 630</b> PVC EN ISO 1452 PN6 + pezzi speciali acciaio (curve <b>n. 11</b>).</li>
-            <li>Sabbia di cava per rinfianco: sezione media 0,3 m²/m → <b>649,2 m³</b>.</li>
-            <li>Manufatti di regolazione: derivazioni <b>n. 3</b>, attuatori <b>n. 3</b>, stazioni controllo remoto <b>n. 4</b>.</li>
-            <li>Pozzetti prefabbricati 150×150×150 cm: <b>n. 6</b>.</li>
-          </ul>
-        </details>
-
-        <details>
-          <summary>Tronco 2 – vasca Il Rio → innesto su condotta acciaio DN600 (sponda sinistra Tidone)</summary>
-          <ul class="list">
-            <li>Copertura canale Tavernago–Tuna: <b>244 m</b> PVC DN 630 EN ISO 1452 PN6 + curve acciaio <b>n. 6</b>.</li>
-            <li>Sabbia di cava per rinfianco: <b>73,2 m³</b>.</li>
-            <li>Regolazioni: derivazioni <b>n. 2</b>, attuatori <b>n. 2</b>, stazioni controllo remoto <b>n. 1</b>.</li>
-            <li>Pozzetti 150×150×150 cm: <b>n. 6</b>.</li>
-            <li>Serbatoio PE corrugato (vasca compenso): volume <b>37.800 l</b>.</li>
-          </ul>
-        </details>
-
-        <details>
-          <summary>Tronco 3 – innesto su condotta DN600 (sponda destra Tidone) → Lago delle Lische</summary>
-          <ul class="list">
-            <li>Copertura canale: <b>5.749 m</b> PVC DN 630 + curve acciaio <b>n. 66</b>.</li>
-            <li>Sabbia per rinfianco: <b>1.724,7 m³</b>.</li>
-            <li>Regolazioni: derivazioni <b>n. 7</b>, sezionamenti <b>n. 4</b>, attuatori <b>n. 11</b>, stazioni controllo <b>n. 11</b>.</li>
-            <li>Pozzetti 150×150×150 cm: <b>n. 24</b>.</li>
-          </ul>
-        </details>
-
-        <details>
-          <summary>Tronco 4 – Lago delle Lische → Tuna</summary>
-          <ul class="list">
-            <li>Copertura canale: <b>6.389 m</b> PVC DN 630 + curve acciaio <b>n. 84</b>.</li>
-            <li>Sabbia per rinfianco: <b>1.916,7 m³</b>.</li>
-            <li>Regolazioni: derivazioni <b>n. 15</b>, sezionamenti <b>n. 4</b>, attuatori <b>n. 19</b>, stazioni controllo <b>n. 19</b>.</li>
-            <li>Pozzetti 150×150×150 cm: <b>n. 32</b>.</li>
-          </ul>
-        </details>
-
-      </details>
     </div>
   </section>
 
-  <!-- COLONNA DX: tabelle economiche -->
-  <aside class="panel">
-    <div class="panel-header">
-      <div class="h">Quadro economico (sintesi)</div>
-      <div class="btnrow">
-        <button id="btnTogglePrices">Mostra 2021 / 2022</button>
+  <!-- Baseline & benefici -->
+  <section class="panel hidden" id="p-baseline" role="tabpanel" aria-labelledby="t-baseline">
+    <div class="panelHeader">
+      <div>
+        <div class="h">Baseline & benefici attesi</div>
+        <div class="hint">Contesto tecnico per interpretare i KPI (perdite, volumi, efficienza di trasporto).</div>
+      </div>
+      <div class="hint"><span class="badge">Da Relazione agronomica</span></div>
+    </div>
+    <div class="panelBody">
+      <div class="cards">
+        <div class="card">
+          <div class="k">Perdite attuali di trasporto</div>
+          <div class="v">48%</div>
+          <div class="s">Coefficiente di perdita stimato mettendo a confronto volumi immessi e consegnati.</div>
+        </div>
+        <div class="card">
+          <div class="k">Esercizio stagionale medio</div>
+          <div class="v">67,5 giorni</div>
+          <div class="s">Stima media (su 90 giorni di periodo irriguo).</div>
+        </div>
+        <div class="card">
+          <div class="k">Volume perdite baseline</div>
+          <div class="v">839.808 m³</div>
+          <div class="s">48% di 1.749.600 m³.</div>
+        </div>
+        <div class="card">
+          <div class="k">Volume consegnato baseline</div>
+          <div class="v">909.792 m³</div>
+          <div class="s">52% del volume transitante stagionale.</div>
+        </div>
+        <div class="card">
+          <div class="k">Tempo di percorrenza</div>
+          <div class="v">17–20 h</div>
+          <div class="s">Con canale in terra (12 km). Post opera: 3–4 h.</div>
+        </div>
+        <div class="card">
+          <div class="k">Beneficio PNRR chiave</div>
+          <div class="v">~300.000 m³/stagione</div>
+          <div class="s">Riduzione prelievo alla fonte grazie a maggiore efficienza (riduzione perdite).</div>
+        </div>
       </div>
     </div>
+  </section>
 
-    <div class="panel-body">
-      <div class="note" style="margin-bottom:10px;">
-        Importi da QE: confronto <b>Progetto 2021</b> e <b>Revisione prezzi 2022</b>.
+  <!-- Misura & telecontrollo -->
+  <section class="panel hidden" id="p-meters" role="tabpanel" aria-labelledby="t-meters">
+    <div class="panelHeader">
+      <div>
+        <div class="h">Misura & telecontrollo</div>
+        <div class="hint">Indicatori PNRR legati a misurazione/monitoraggio e gestione remota.</div>
       </div>
-
-      <div class="panel" style="box-shadow:var(--shadow2); border-radius:12px; margin-bottom:12px;">
-        <div class="panel-header" style="border-radius:12px 12px 0 0;">
-          <div class="h">A) Forniture e servizi in appalto</div>
-        </div>
-        <div class="panel-body" style="padding:0;">
-          <div style="max-height: 320px; overflow:auto;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Voce</th>
-                  <th class="col2021">2021 (€)</th>
-                  <th class="col2022" style="display:none;">2022 (€)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Forniture in appalto (totale)</td>
-                  <td class="col2021">4.158.143,00</td>
-                  <td class="col2022" style="display:none;">4.972.404,00</td>
-                </tr>
-                <tr>
-                  <td>Servizi: bonifica amianto (Tronco 1)</td>
-                  <td class="col2021">341.062,21</td>
-                  <td class="col2022" style="display:none;">375.183,89</td>
-                </tr>
-                <tr>
-                  <td>Oneri sicurezza (non ribassabili)</td>
-                  <td class="col2021">24.000,00</td>
-                  <td class="col2022" style="display:none;">26.418,26</td>
-                </tr>
-                <tr>
-                  <td><b>Totale A)</b></td>
-                  <td class="col2021"><b>4.523.205,21</b></td>
-                  <td class="col2022" style="display:none;"><b>5.374.006,15</b></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="panel" style="box-shadow:var(--shadow2); border-radius:12px;">
-        <div class="panel-header" style="border-radius:12px 12px 0 0;">
-          <div class="h">B) Somme a disposizione</div>
-        </div>
-        <div class="panel-body" style="padding:0;">
-          <div style="max-height: 380px; overflow:auto;">
-            <table>
-              <thead>
-                <tr>
-                  <th>Voce</th>
-                  <th class="col2021">2021 (€)</th>
-                  <th class="col2022" style="display:none;">2022 (€)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Allacciamenti ai pubblici servizi</td>
-                  <td class="col2021">100.000,00</td>
-                  <td class="col2022" style="display:none;">110.000,00</td>
-                </tr>
-                <tr>
-                  <td>Imprevisti (3% di A)</td>
-                  <td class="col2021">135.696,16</td>
-                  <td class="col2022" style="display:none;">—</td>
-                </tr>
-                <tr>
-                  <td>Acquisizione aree / indennizzi</td>
-                  <td class="col2021">621.092,09</td>
-                  <td class="col2022" style="display:none;">591.516,28</td>
-                </tr>
-                <tr>
-                  <td>Spese tecniche (CSE)</td>
-                  <td class="col2021">49.961,63</td>
-                  <td class="col2022" style="display:none;">47.582,51</td>
-                </tr>
-                <tr>
-                  <td>Spese tecniche (Direttore operativo)</td>
-                  <td class="col2021">19.984,66</td>
-                  <td class="col2022" style="display:none;">19.033,01</td>
-                </tr>
-                <tr>
-                  <td>Commissioni giudicatrici</td>
-                  <td class="col2021">9.450,00</td>
-                  <td class="col2022" style="display:none;">9.000,00</td>
-                </tr>
-                <tr>
-                  <td>Collaudi / verifiche tecniche</td>
-                  <td class="col2021">78.555,81</td>
-                  <td class="col2022" style="display:none;">74.815,06</td>
-                </tr>
-                <tr>
-                  <td>IVA e imposte su A + voci selezionate</td>
-                  <td class="col2021">1.245.215,57</td>
-                  <td class="col2022" style="display:none;">1.081.868,03</td>
-                </tr>
-                <tr>
-                  <td>Interferenze</td>
-                  <td class="col2021">17.250,00</td>
-                  <td class="col2022" style="display:none;">18.112,50</td>
-                </tr>
-                <tr>
-                  <td>Arrotondamento</td>
-                  <td class="col2021">33,75</td>
-                  <td class="col2022" style="display:none;">1,59</td>
-                </tr>
-                <tr>
-                  <td><b>Totale B)</b></td>
-                  <td class="col2021"><b>2.076.794,79</b></td>
-                  <td class="col2022" style="display:none;"><b>2.152.373,85</b></td>
-                </tr>
-                <tr>
-                  <td><b>Totale (A + B)</b></td>
-                  <td class="col2021"><b>6.600.000,00</b></td>
-                  <td class="col2022" style="display:none;"><b>7.526.380,00</b></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <p class="note" style="margin-top:10px;">
-        Nota: nel QE è indicato anche “da finanziare” per revisione 2022 pari a <b>€ 926.380,00</b>.
-      </p>
-
+      <div class="hint"><span class="badge">Target</span></div>
     </div>
-  </aside>
+    <div class="panelBody">
+      <div class="grid">
+        <div>
+          <div class="cards">
+            <div class="card">
+              <div class="k">Misuratori portata alla fonte</div>
+              <div class="v">n. 4</div>
+              <div class="s">Installazione misuratori al prelievo Po Pievetta.</div>
+            </div>
+            <div class="card">
+              <div class="k">Monitoraggio portate distribuite</div>
+              <div class="v">Caramello + Il Rio</div>
+              <div class="s">Misure presso stazione Caramello e vasca Il Rio (monitoraggi).</div>
+            </div>
+            <div class="card">
+              <div class="k">Gestione da remoto</div>
+              <div class="v">Telecontrollo</div>
+              <div class="s">Ammodernamento con nuove tecnologie di controllo da remoto di misure/prelievi e volumi distribuiti.</div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px" class="callout">
+            <div class="note">
+              Con dati “realizzato” disponibili, in questa scheda vengono mostrati:
+              misuratori installati (n), RTU/telecontrollo attivati (n), tratte/derivazioni in telecontrollo, date collaudo.
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="k">Preparazione “Realizzato”</div>
+            <div class="note">
+              Formato suggerito (anche CSV/Excel): data, misuratori installati cumulati, RTU attive cumulate, area efficientata (ha),
+              risparmio stimato (m³), note.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Realizzato placeholder -->
+  <section class="panel hidden" id="p-realized" role="tabpanel" aria-labelledby="t-realized">
+    <div class="panelHeader">
+      <div>
+        <div class="h">Realizzato (placeholder)</div>
+        <div class="hint">Scheda disattivata finché non arrivano i dati consuntivi.</div>
+      </div>
+    </div>
+    <div class="panelBody">
+      <div class="callout">
+        <div class="note">
+          Con il caricamento del realizzato vengono mostrati automaticamente:
+          • avanzamento vs target • serie storica • indicatori “semaforo” • export PDF.<br/>
+          Esempio formato dati: <a class="navlink" href="realizzato_esempio.json">realizzato_esempio.json</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
 </main>
 
 <script>
-  // Expand / collapse all details
-  const allDetails = () => Array.from(document.querySelectorAll('details'));
-  document.getElementById('btnExpand').addEventListener('click', () => allDetails().forEach(d => d.open = true));
-  document.getElementById('btnCollapse').addEventListener('click', () => allDetails().forEach(d => d.open = false));
-
-  // Toggle 2021/2022 columns
-  let showing2022 = false;
-  const btnToggle = document.getElementById('btnTogglePrices');
-  const setCols = () => {
-    document.querySelectorAll('.col2021').forEach(el => el.style.display = showing2022 ? 'none' : '');
-    document.querySelectorAll('.col2022').forEach(el => el.style.display = showing2022 ? '' : 'none');
-    btnToggle.textContent = showing2022 ? 'Mostra 2022 / 2021' : 'Mostra 2021 / 2022';
+  // ---------------------------
+  // CONFIG TARGET (PNRR / progetto)
+  // ---------------------------
+  // NOTA: qui lasciamo "realized" = null. Quando avrai dati, li inseriamo e calcoliamo %.
+  const KPI = {
+    save_m3: { label: "Risparmio idrico (m³/stagione)", target: 300000, realized: null },
+    area_ha: { label: "Area irrigua efficientata (ha)", target: 7448, realized: null },
+    meters_n:{ label: "Misuratori installati (n)", target: 4, realized: null },
+    // Efficienza (perdite): baseline 48%, target 2%
+    losses:  { label: "Perdite di trasporto (%)", baseline: 48, target: 2 }
   };
-  btnToggle.addEventListener('click', () => { showing2022 = !showing2022; setCols(); });
-  setCols();
-</script>
 
+  // ---------------------------
+  // Tabs
+  // ---------------------------
+  const tabs = Array.from(document.querySelectorAll(".tab[role='tab']"));
+  const panels = Array.from(document.querySelectorAll("[role='tabpanel']"));
+
+  function activateTab(tabId){
+    const tab = document.getElementById(tabId);
+    if(tab.classList.contains("disabled")) return;
+
+    tabs.forEach(t=>{
+      const selected = (t.id === tabId);
+      t.setAttribute("aria-selected", selected ? "true" : "false");
+      t.tabIndex = selected ? 0 : -1;
+    });
+
+    panels.forEach(p=>{
+      p.classList.toggle("hidden", p.getAttribute("aria-labelledby") !== tabId);
+    });
+  }
+
+  tabs.forEach(t=>{
+    t.addEventListener("click", ()=> activateTab(t.id));
+    t.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter" || e.key === " ") activateTab(t.id);
+    });
+  });
+
+  // ---------------------------
+  // Helpers
+  // ---------------------------
+  function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+
+  function setBar(barId, pct){
+    const el = document.getElementById(barId);
+    if(!el) return;
+    el.style.width = (clamp01(pct)*100).toFixed(1) + "%";
+  }
+
+  function setPctText(textId, realized, target){
+    const el = document.getElementById(textId);
+    if(!el) return;
+    if(realized === null || realized === undefined) el.textContent = "in attesa dati";
+    else el.textContent = Math.round((realized/target)*100) + "%";
+  }
+
+  // Donut drawing (monocromatico e leggibile)
+  function drawDonut(canvasId, value01){
+    const c = document.getElementById(canvasId);
+    if(!c) return;
+    const ctx = c.getContext("2d");
+    const w = c.width, h = c.height;
+    const cx = w/2, cy = h/2;
+    const r = Math.min(w,h)/2 - 8;
+    const t = 12;
+    ctx.clearRect(0,0,w,h);
+
+    // track
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.strokeStyle = "#efefef";
+    ctx.lineWidth = t;
+    ctx.stroke();
+
+    // value
+    const start = -Math.PI/2;
+    const end = start + Math.PI*2*clamp01(value01);
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, start, end);
+    ctx.strokeStyle = "#111";
+    ctx.lineWidth = t;
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    // label %
+    ctx.fillStyle = "#111";
+    ctx.font = "bold 16px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(Math.round(clamp01(value01)*100) + "%", cx, cy);
+  }
+
+  // ---------------------------
+  // Render initial (solo target)
+  // ---------------------------
+  // Progress bars remain 0 until realized arrives
+  setPctText("kpi_save_m3_pct", KPI.save_m3.realized, KPI.save_m3.target);
+  setPctText("kpi_area_ha_pct", KPI.area_ha.realized, KPI.area_ha.target);
+  setPctText("kpi_meters_n_pct", KPI.meters_n.realized, KPI.meters_n.target);
+
+  setBar("bar_save_m3", KPI.save_m3.realized ? (KPI.save_m3.realized/KPI.save_m3.target) : 0);
+  setBar("bar_area_ha", KPI.area_ha.realized ? (KPI.area_ha.realized/KPI.area_ha.target) : 0);
+  setBar("bar_meters_n", KPI.meters_n.realized ? (KPI.meters_n.realized/KPI.meters_n.target) : 0);
+
+  // Donut: target losses = 2% => show "utile" 98% (value01 = 0.98)
+  drawDonut("donut_losses", 1 - (KPI.losses.target/100));
+
+  // Donut: time reduction ~80% (17–20 -> 3–4). We show 80% as indicative.
+  drawDonut("donut_time", 0.80);
+
+  // Donut: completeness of targets loaded (not progress)
+  drawDonut("donut_plan", 1.00);
+</script>
 </body>
 </html>
