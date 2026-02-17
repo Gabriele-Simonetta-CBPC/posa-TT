@@ -1,10 +1,10 @@
 {
-  "fonte_dati": "Delibere CA_331, CA_389, CA_207, CA_484, CA_486 e quadro CA_050",
+  "fonte_dati": "Delibere CA_331, CA_389, CA_207, CA_484, CA_486, CA_050",
   "ultimo_aggiornamento": "2026-02-17",
   "ultima_delibera_comitato": {
-    "numero": "Delibera n. 486/2025",
-    "data": "2025-12-03",
-    "oggetto": "Approvazione SAF n. 6 - Lotto 1 (CIG 9584745DC7)"
+    "numero": "Delibera n. 50/2026",
+    "data": "2026-02-03",
+    "oggetto": "Approvazione SAF n. 9 - Lotto 7 (CIG A000B9B491)"
   },
   "forniture": [
     {
@@ -14,10 +14,10 @@
       "voce": "Tubazioni PVC DN 630",
       "unita": "€",
       "quantita_totale": 2230912.22,
-      "quantita_consegnata": 0,
-      "quantita_posata": 0,
+      "quantita_consegnata": 1488018.45,
+      "quantita_posata": 1488018.45,
       "stato_avanzamento": "In avanzamento",
-      "note": "Importo da quadro rideterminato post-aggiudicazione | Rif. CA 486/2025",
+      "note": "Importo da quadro rideterminato post-aggiudicazione | Rif. CA 486/2025 | CA 486/2025 (66.7%)",
       "ultima_delibera": "CA 486/2025"
     },
     {
@@ -27,10 +27,10 @@
       "voce": "Manufatti in acciaio e saracinesche di linea",
       "unita": "€",
       "quantita_totale": 534590.54,
-      "quantita_consegnata": 0,
-      "quantita_posata": 0,
+      "quantita_consegnata": 59339.55,
+      "quantita_posata": 59339.55,
       "stato_avanzamento": "In avanzamento",
-      "note": "Importo da quadro rideterminato post-aggiudicazione | Rif. CA 331/2024",
+      "note": "Importo da quadro rideterminato post-aggiudicazione | Rif. CA 331/2024 | CA 331/2024 (11.1%)",
       "ultima_delibera": "CA 331/2024"
     },
     {
@@ -43,7 +43,7 @@
       "quantita_consegnata": 0,
       "quantita_posata": 0,
       "stato_avanzamento": "In avanzamento",
-      "note": "Importo da quadro rideterminato post-aggiudicazione | Rif. CA 207/2025",
+      "note": "Importo da quadro rideterminato post-aggiudicazione | Rif. CA 207/2025 | CA 207/2025 (percentuale da confermare)",
       "ultima_delibera": "CA 207/2025"
     },
     {
@@ -53,10 +53,10 @@
       "voce": "Tubazioni mobili complete di raccordi",
       "unita": "€",
       "quantita_totale": 238322.7,
-      "quantita_consegnata": 0,
-      "quantita_posata": 0,
+      "quantita_consegnata": 52907.64,
+      "quantita_posata": 52907.64,
       "stato_avanzamento": "In avanzamento",
-      "note": "Importo da quadro rideterminato post-aggiudicazione | Rif. CA 484/2025",
+      "note": "Importo da quadro rideterminato post-aggiudicazione | Rif. CA 484/2025 | CA 484/2025 (22.2%)",
       "ultima_delibera": "CA 484/2025"
     },
     {
@@ -78,10 +78,10 @@
       "voce": "Attrezzature elettriche",
       "unita": "€",
       "quantita_totale": 0,
-      "quantita_consegnata": 0,
-      "quantita_posata": 0,
+      "quantita_consegnata": 0.0,
+      "quantita_posata": 0.0,
       "stato_avanzamento": "In avanzamento",
-      "note": "Voce e CIG da CA_050; importo da confermare | Rif. CA 389/2024",
+      "note": "Voce e CIG da CA_050; importo da confermare | Rif. CA 389/2024 | CA 389/2024 (100.0%)",
       "ultima_delibera": "CA 389/2024"
     },
     {
@@ -91,10 +91,11 @@
       "voce": "Materiali inerti",
       "unita": "€",
       "quantita_totale": 0,
-      "quantita_consegnata": 0,
-      "quantita_posata": 0,
-      "stato_avanzamento": "Da aggiornare con SAF",
-      "note": "Voce e CIG da CA_050; importo da confermare"
+      "quantita_consegnata": 0.0,
+      "quantita_posata": 0.0,
+      "stato_avanzamento": "In avanzamento",
+      "note": "Voce e CIG da CA_050; importo da confermare | CA 050/2026 (100.0%)",
+      "ultima_delibera": "CA 050/2026"
     },
     {
       "id": "F008",
@@ -140,7 +141,11 @@
       "lotto": 2,
       "cig": "A0008B6114",
       "oggetto": "Approvazione SAL n. 1 - Lotto 2",
-      "url": "https://www.cbpiacenza.it/attachments/article/1709/CA_331.pdf"
+      "saf_numero": 1,
+      "contabilizzato_eur": null,
+      "percentuale_avanzamento": 11.1,
+      "url": "https://www.cbpiacenza.it/attachments/article/1709/CA_331.pdf",
+      "contabilizzato_note": "Valore contabilizzato non leggibile in modo affidabile dal testo estratto PDF; da confermare da quadro contabile."
     },
     {
       "numero": "CA 389/2024",
@@ -148,7 +153,11 @@
       "lotto": 6,
       "cig": "A000B6EF6B",
       "oggetto": "Approvazione SAF n. 1 e ultimo - Lotto 6",
-      "url": "https://www.cbpiacenza.it/attachments/article/1709/CA_389.pdf"
+      "saf_numero": 1,
+      "contabilizzato_eur": null,
+      "percentuale_avanzamento": 100.0,
+      "url": "https://www.cbpiacenza.it/attachments/article/1709/CA_389.pdf",
+      "contabilizzato_note": "Valore contabilizzato non leggibile in modo affidabile dal testo estratto PDF; da confermare da quadro contabile."
     },
     {
       "numero": "CA 207/2025",
@@ -156,7 +165,11 @@
       "lotto": 3,
       "cig": "A00090FA83",
       "oggetto": "Approvazione stato avanzamento forniture - Lotto 3",
-      "url": "https://www.cbpiacenza.it/attachments/article/1726/CA_207.pdf"
+      "saf_numero": null,
+      "contabilizzato_eur": null,
+      "percentuale_avanzamento": null,
+      "url": "https://www.cbpiacenza.it/attachments/article/1726/CA_207.pdf",
+      "contabilizzato_note": "Valore contabilizzato non leggibile in modo affidabile dal testo estratto PDF; da confermare da quadro contabile."
     },
     {
       "numero": "CA 484/2025",
@@ -164,7 +177,11 @@
       "lotto": 4,
       "cig": "A000B5D168",
       "oggetto": "Approvazione SAF n. 2 - Lotto 4",
-      "url": "https://www.cbpiacenza.it/attachments/article/1726/CA_484.pdf"
+      "saf_numero": 2,
+      "contabilizzato_eur": null,
+      "percentuale_avanzamento": 22.2,
+      "url": "https://www.cbpiacenza.it/attachments/article/1726/CA_484.pdf",
+      "contabilizzato_note": "Valore contabilizzato non leggibile in modo affidabile dal testo estratto PDF; da confermare da quadro contabile."
     },
     {
       "numero": "CA 486/2025",
@@ -172,7 +189,23 @@
       "lotto": 1,
       "cig": "9584745DC7",
       "oggetto": "Approvazione SAF n. 6 - Lotto 1",
-      "url": "https://www.cbpiacenza.it/attachments/article/1726/CA_486.pdf"
+      "saf_numero": 6,
+      "contabilizzato_eur": null,
+      "percentuale_avanzamento": 66.7,
+      "url": "https://www.cbpiacenza.it/attachments/article/1726/CA_486.pdf",
+      "contabilizzato_note": "Valore contabilizzato non leggibile in modo affidabile dal testo estratto PDF; da confermare da quadro contabile."
+    },
+    {
+      "numero": "CA 050/2026",
+      "data": "2026-02-03",
+      "lotto": 7,
+      "cig": "A000B9B491",
+      "oggetto": "Approvazione SAF n. 9 - Lotto 7",
+      "saf_numero": 9,
+      "contabilizzato_eur": null,
+      "percentuale_avanzamento": 100.0,
+      "url": "https://www.cbpiacenza.it/attachments/article/1748/CA_050.pdf",
+      "contabilizzato_note": "Valore contabilizzato non leggibile in modo affidabile dal testo estratto PDF; da confermare da quadro contabile."
     }
   ]
 }
