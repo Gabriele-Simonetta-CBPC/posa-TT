@@ -1,0 +1,28 @@
+{
+  "fonte": "CA_050.pdf e quadro intervento PNRR",
+  "cup": "G99J21006930005",
+  "quadri": [
+    {
+      "codice": "QE-01",
+      "nome": "Quadro economico di progetto",
+      "descrizione": "Importo complessivo intervento indicato nel progetto finanziato.",
+      "importo_eur": 7666906.95,
+      "riferimento": "Decreto MIPAAF - DISR 01 - Prot. 0484456 del 30/09/2022"
+    },
+    {
+      "codice": "QE-02",
+      "nome": "Quadro economico aggiornamento prezzi",
+      "descrizione": "Valori da aggiornamento prezzi/istanza FOI richiamati nella delibera.",
+      "importo_eur": 4707005.14,
+      "riferimento": "CA_050: importo totale forniture in appalto (quadro aggiornato)"
+    },
+    {
+      "codice": "QE-03",
+      "nome": "Quadro economico variante",
+      "descrizione": "Quadro rideterminato in variante (forniture) con riduzione d'importo indicata in delibera.",
+      "importo_eur": 4932815.80,
+      "riferimento": "CA_050: a.1 importo totale forniture appalti (colonna variante)"
+    }
+  ],
+  "note": "I valori QE-02 e QE-03 sono estratti dalle tabelle riportate in CA_050 e vanno confermati con il quadro economico ufficiale completo."
+}
