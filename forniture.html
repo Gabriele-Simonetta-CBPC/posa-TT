@@ -131,11 +131,19 @@
               <th>Eseguito/posato</th>
               <th>% eseguito</th>
               <th>Stato avanzamento</th>
+              <th>Ultima delibera</th>
               <th>Note</th>
             </tr>
           </thead>
           <tbody id="fornitureRows"></tbody>
         </table>
+      </div>
+
+
+      <div class="panelHeader" style="margin-top:10px; border:1px solid var(--border); border-radius:12px;">
+        <div class="h">Delibere forniture (fonti)</div>
+        <div class="hint">Elenco delibere lette dai documenti indicati.</div>
+        <div id="delibereList" class="note"></div>
       </div>
 
       <p class="note">Per aggiornare i dati è sufficiente modificare il file <code>forniture.json</code> mantenendo la stessa struttura.</p>
@@ -156,6 +164,8 @@
 
     document.getElementById('updated').textContent = `Ultimo aggiornamento: ${data.ultimo_aggiornamento || '—'}`;
     document.getElementById('delibera').textContent = `Delibera: ${data.ultima_delibera_comitato?.numero || '—'}`;
+    const delibere = Array.isArray(data.delibere_forniture) ? data.delibere_forniture : [];
+    document.getElementById('delibereList').innerHTML = delibere.length ? delibere.map(d => `• <a class="navlink" href="${d.url}" target="_blank" rel="noopener">${d.numero}</a> — Lotto ${d.lotto} (${d.cig}) — ${d.oggetto}`).join('<br/>') : 'Nessuna delibera caricata.';
     document.getElementById('totConsegne').textContent = `${pctConsegna.toFixed(1)}%`;
     document.getElementById('totConsegneDetail').textContent = `${fmtNumber(consegnata)} su ${fmtNumber(total)} €`;
     document.getElementById('barConsegne').style.width = `${pctConsegna.toFixed(1)}%`;
@@ -178,12 +188,12 @@
         <td>${fmtNumber(Number(r.quantita_consegnata || 0))} ${r.unita || ''}</td>
         <td>${pConsegna.toFixed(1)}%</td>
         <td>${fmtNumber(Number(r.quantita_posata || 0))} ${r.unita || ''}</td>
-        <td>${pPosa.toFixed(1)}%</td><td>${r.stato_avanzamento || ''}</td><td>${r.note || ''}</td>`;
+        <td>${pPosa.toFixed(1)}%</td><td>${r.stato_avanzamento || ''}</td><td>${r.ultima_delibera || '—'}</td><td>${r.note || ''}</td>`;
       tbody.appendChild(tr);
     });
   }
   fetch('forniture.json').then(r => r.json()).then(render).catch(() => {
-    document.getElementById('fornitureRows').innerHTML = '<tr><td colspan="11">Errore nel caricamento di forniture.json</td></tr>';
+    document.getElementById('fornitureRows').innerHTML = '<tr><td colspan="12">Errore nel caricamento di forniture.json</td></tr>';
   });
 </script>
 </body>
