@@ -6,7 +6,7 @@
   <title>PNRR M2C4 – Investimento 4.3 | KPI di progetto</title>
   <link rel="icon" href="data:,"/>
   <style>
-    :root{--bg:#f6f7f9;--fg:#111;--muted:#5f6570;--panel:#fff;--border:#e3e6eb;--soft:#f1f3f6;--shadow:0 8px 22px rgba(0,0,0,.08);--radius:14px;}
+    :root{--bg:#f6f7f9;--fg:#111;--muted:#5f6570;--panel:#fff;--border:#e3e6eb;--soft:#f1f3f6;--shadow:0 8px 22px rgba(0,0,0,.08);--radius:14px;--chart:#0b3d91;}
     *{box-sizing:border-box;min-width:0}
     body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--fg)}
     header{background:#fff;border-bottom:1px solid var(--border);padding:10px 12px}
@@ -32,7 +32,7 @@
     .s{font-size:12px;color:#4d535e;line-height:1.35}
     .pRow{display:flex;justify-content:space-between;font-size:12px}
     .bar{height:8px;border-radius:999px;background:#eceff4;overflow:hidden;border:1px solid #e2e6ee}
-    .bar > div{height:100%;width:0;background:#111}
+    .bar > div{height:100%;width:0;background:var(--chart)}
     .barMeta{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
     .donutWrap{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
     canvas.donut{width:88px;height:88px;border:1px solid var(--border);border-radius:50%;background:#fff;flex:0 0 auto}
@@ -152,8 +152,8 @@
     const v=clamp01(value);
     ctx.clearRect(0,0,w,h);
     ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.strokeStyle='#eceff4'; ctx.lineWidth=t; ctx.stroke();
-    ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*v); ctx.strokeStyle='#111'; ctx.lineWidth=t; ctx.lineCap='round'; ctx.stroke();
-    ctx.fillStyle='#111'; ctx.font='bold 14px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(Math.round(v*100)+'%',cx,cy);
+    ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*v); ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue('--chart').trim() || '#0b3d91'; ctx.lineWidth=t; ctx.lineCap='round'; ctx.stroke();
+    ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue('--chart').trim() || '#0b3d91'; ctx.font='bold 14px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(Math.round(v*100)+'%',cx,cy);
   }
   function fmt(n){ return new Intl.NumberFormat('it-IT', {maximumFractionDigits:2}).format(n||0); }
 
