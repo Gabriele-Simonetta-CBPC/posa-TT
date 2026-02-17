@@ -115,5 +115,32 @@
       "diff_variante_vs_post_gara_eur": 185090.71
     }
   ],
-  "note": "Valori riportati dal prospetto di confronto quadri economici allegato alla Delibera CA_066. Dove la leggibilità del prospetto non era perfetta, i valori sono stati mantenuti coerenti con il quadro forniture già validato in repository."
+  "note": "Valori riportati dal prospetto di confronto quadri economici allegato alla Delibera CA_066. Dove la leggibilità del prospetto non era perfetta, i valori sono stati mantenuti coerenti con il quadro forniture già validato in repository. Sono state aggiunte anche le voci B in forma di totale B; il dettaglio B.1..B.n va completato con i valori puntuali del prospetto CA_066.",
+  "confronto_voci_b_senza_iva": [
+    {
+      "voce": "B totale somme a disposizione",
+      "descrizione": "Somme a disposizione (totale quadro - totale forniture in appalto a.1)",
+      "base_gara_eur": 1418657.82,
+      "post_gara_eur": 2532860.88,
+      "variante_eur": 2347770.17,
+      "diff_variante_vs_post_gara_eur": -185090.71
+    },
+    {
+      "voce": "B.1 ... B.n (dettaglio)",
+      "descrizione": "Dettaglio singole voci B da prospetto CA_066 da completare puntualmente",
+      "base_gara_eur": null,
+      "post_gara_eur": null,
+      "variante_eur": null,
+      "diff_variante_vs_post_gara_eur": null
+    }
+  ],
+  "riepilogo_a_b_senza_iva": {
+    "totale_quadro_senza_iva_eur": 6391061.82,
+    "totale_a1_forniture_base_eur": 4972404.0,
+    "totale_b_base_eur": 1418657.82,
+    "totale_a1_forniture_post_gara_eur": 3858200.94,
+    "totale_b_post_gara_eur": 2532860.88,
+    "totale_a1_forniture_variante_eur": 4043291.65,
+    "totale_b_variante_eur": 2347770.17
+  }
 }
