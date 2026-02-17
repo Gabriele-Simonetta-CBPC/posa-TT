@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quadro economico – Schema irriguo Tidone</title>
+  <link rel="icon" href="data:," />
+  <style>
+    :root{
+      --bg:#f6f7f9; --fg:#111; --muted:#5f6570; --panel:#fff; --border:#e3e6eb;
+      --soft:#f1f3f6; --shadow:0 8px 22px rgba(0,0,0,.08); --radius:14px; --chart:#0b3d91;
+    }
+    *{ box-sizing:border-box; min-width:0; }
+    body{ margin:0; font-family:Arial,sans-serif; background:var(--bg); color:var(--fg); }
+    header{ background:#fff; border-bottom:1px solid var(--border); padding:10px 12px; }
+    .top{ display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; align-items:flex-start; }
+    .title{ flex:1 1 860px; }
+    .title b{ display:block; font-size:22px; margin-bottom:4px; }
+    .subtitle{ font-size:13px; color:#1a1d22; line-height:1.3; }
+    .meta{ margin-top:8px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .meta-nav{ display:flex; gap:8px; flex-wrap:wrap; }
+    .meta-static{ display:flex; gap:8px; flex-wrap:wrap; margin-left:auto; }
+    .pill{ border:1px solid var(--border); background:var(--soft); border-radius:999px; padding:4px 10px; font-size:12px; }
+    .navlink{ color:#111; text-decoration:none; font-weight:700; }
+    .navlink:hover{ background:#e9edf2; }
+    .logos{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
+    .logos img{ height:40px; border:1px solid #e8ebf1; border-radius:10px; padding:6px 8px; background:#fff; }
+
+    main{ max-width:1280px; margin:0 auto; padding:10px; }
+    .panel{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:10px; }
+    .h{ font-size:16px; font-weight:700; margin-bottom:8px; }
+    .hint{ font-size:12px; color:var(--muted); margin-bottom:10px; }
+
+    .cards{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:10px; }
+    .card{ border:1px solid var(--border); border-radius:12px; background:#fff; padding:10px; }
+    .k{ font-size:12px; color:var(--muted); }
+    .v{ font-size:24px; font-weight:700; margin-top:6px; line-height:1.15; color:var(--chart); }
+    .s{ font-size:12px; color:#4d535e; margin-top:6px; line-height:1.35; }
+
+    .tableWrap{ border:1px solid var(--border); border-radius:12px; overflow:auto; margin-top:10px; }
+    table{ width:100%; border-collapse:collapse; min-width:960px; font-size:12px; }
+    th,td{ padding:10px; border-bottom:1px solid #eceff4; text-align:right; }
+    th{ background:#fff; position:sticky; top:0; }
+    th:first-child, td:first-child, th:nth-child(2), td:nth-child(2){ text-align:left; }
+    tr:last-child td{ border-bottom:0; }
+
+    .note{ margin-top:10px; font-size:12px; color:var(--muted); border:1px dashed #d8dde5; background:#fbfcfe; border-radius:12px; padding:8px 10px; }
+    code{ background:#f6f6f6; border:1px solid #ececec; border-radius:6px; padding:2px 6px; }
+
+    @media (max-width:1100px){ .cards{ grid-template-columns:1fr; } .meta-static{ margin-left:0; } .logos img{height:34px;} .title b{font-size:19px;} }
+  </style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div class="title">
+      <b>PNRR M2C4 – Investimento 4.3 | Quadro economico</b>
+      <div class="subtitle">Schema irriguo Tidone: interventi di risparmio idrico per il contrasto alla siccità e adeguamenti funzionali del sistema adduzione in sponda sinistra e destra Tidone. Codice intervento 08-05-5703-847. CUP G99J21006930005.</div>
+      <div class="meta">
+        <div class="meta-nav">
+          <a class="pill navlink" href="index.html">Mappa avanzamento</a>
+          <a class="pill navlink" href="info.html">Scheda KPI</a>
+          <a class="pill navlink" href="forniture.html">Forniture</a>
+        </div>
+        <div class="meta-static">
+          <span class="pill" id="fonte-pill">Confronto quadri economici</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="logos">
+      <img src="assets/italiadomani.png" alt="Italia Domani">
+      <img src="assets/masaf.png" alt="MASAF">
+      <img src="assets/nextgenerationeu.png" alt="NextGenerationEU">
+      <img src="assets/consorzio.png" alt="Consorzio">
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <div class="h">Confronto quadri economici</div>
+    <div class="hint">Dati caricati da <code>quadro-economico.json</code> (Delibera CA_066).</div>
+
+    <div class="cards" id="cards"></div>
+
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Lotto</th>
+            <th>Descrizione</th>
+            <th>Base gara (senza IVA)</th>
+            <th>Post gara (senza IVA)</th>
+            <th>Variante (senza IVA)</th>
+            <th>Variante - Post gara</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div class="note" id="note"></div>
+  </section>
+</main>
+
+<script>
+  function eur(v){ return new Intl.NumberFormat('it-IT', {style:'currency', currency:'EUR'}).format(Number(v || 0)); }
+
+  fetch('quadro-economico.json')
+    .then(r=>r.json())
+    .then(data=>{
+      const cards = document.getElementById('cards');
+      const rows = document.getElementById('rows');
+      cards.innerHTML = '';
+      rows.innerHTML = '';
+
+      const quadri = Array.isArray(data.quadri) ? data.quadri : [];
+      quadri.forEach(q => {
+        const c = document.createElement('article');
+        c.className = 'card';
+        c.innerHTML = `
+          <div class="k">${q.codice || ''}</div>
+          <div class="s"><b>${q.nome || ''}</b></div>
+          <div class="v">${eur(q.spese_senza_iva_eur)}</div>
+          <div class="s">Spese senza IVA</div>
+          <div class="s">IVA: <b>${eur(q.iva_eur)}</b></div>
+          <div class="s">Totale con IVA: <b>${eur(q.spese_con_iva_eur)}</b></div>
+        `;
+        cards.appendChild(c);
+      });
+
+      const confronto = Array.isArray(data.confronto_lotti_senza_iva) ? data.confronto_lotti_senza_iva : [];
+      confronto.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.lotto || ''}</td>
+          <td>${item.descrizione || ''}</td>
+          <td>${eur(item.base_gara_eur)}</td>
+          <td>${eur(item.post_gara_eur)}</td>
+          <td>${eur(item.variante_eur)}</td>
+          <td>${eur(item.diff_variante_vs_post_gara_eur)}</td>
+        `;
+        rows.appendChild(tr);
+      });
+
+      const fonte = data.fonte || 'Confronto quadri economici';
+      document.getElementById('fonte-pill').textContent = fonte;
+      document.getElementById('note').innerHTML = `${data.note || ''}${data.fonte_url ? ` Fonte: <a href="${data.fonte_url}" target="_blank" rel="noopener noreferrer">${data.fonte_url}</a>.` : ''}`;
+    })
+    .catch(()=>{
+      document.getElementById('rows').innerHTML = '<tr><td colspan="6">Errore nel caricamento di quadro-economico.json</td></tr>';
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,51 @@
+{
+  "ultimo_aggiornamento": "2026-02-15",
+  "periodo_riferimento": "SAF 9",
+  "kpi_realizzato": {
+    "save_m3": {
+      "target": 300000,
+      "realizzato": 186500,
+      "unita": "m3/stagione"
+    },
+    "area_ha": {
+      "target": 7448,
+      "realizzato": 5120,
+      "unita": "ha"
+    },
+    "meters_n": {
+      "target": 4,
+      "realizzato": 3,
+      "unita": "n"
+    },
+    "losses_pct": {
+      "baseline": 48,
+      "target": 2,
+      "realizzato": 7.8,
+      "unita": "%"
+    },
+    "tempo_percorrenza_h": {
+      "baseline": 18.5,
+      "target": 3.5,
+      "realizzato": 5.2,
+      "unita": "ore"
+    }
+  },
+  "forniture_realizzato": [
+    {
+      "lotto": 1,
+      "cig": "9584745DC7",
+      "contabilizzato_eur": 1745000,
+      "eseguito_posato_eur": 1604000,
+      "percentuale_avanzamento": 78.2,
+      "note": "Posa principale su tronchi 1 e 2"
+    },
+    {
+      "lotto": 2,
+      "cig": "A0008B6114",
+      "contabilizzato_eur": 402000,
+      "eseguito_posato_eur": 365000,
+      "percentuale_avanzamento": 75.2,
+      "note": "Consegna saracinesche completata"
+    }
+  ]
+}
