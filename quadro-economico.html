@@ -117,6 +117,25 @@
       </table>
     </div>
 
+
+
+    <div class="h" style="margin-top:12px;">Voci richieste (B.3, B.4, B.5, B.15, C, D)</div>
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Voce</th>
+            <th>Descrizione</th>
+            <th>Base gara (senza IVA)</th>
+            <th>Post gara (senza IVA)</th>
+            <th>Variante (senza IVA)</th>
+            <th>Variante - Post gara</th>
+          </tr>
+        </thead>
+        <tbody id="rows-bcd"></tbody>
+      </table>
+    </div>
+
     <div class="note" id="note"></div>
   </section>
 </main>
@@ -130,9 +149,11 @@
       const cards = document.getElementById('cards');
       const rows = document.getElementById('rows');
       const rowsB = document.getElementById('rows-b');
+      const rowsBCD = document.getElementById('rows-bcd');
       cards.innerHTML = '';
       rows.innerHTML = '';
       rowsB.innerHTML = '';
+      rowsBCD.innerHTML = '';
 
       const quadri = Array.isArray(data.quadri) ? data.quadri : [];
       quadri.forEach(q => {
@@ -177,6 +198,20 @@
         rowsB.appendChild(tr);
       });
 
+      const vociBCD = Array.isArray(data.voci_bcd_senza_iva) ? data.voci_bcd_senza_iva : [];
+      vociBCD.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${item.voce || ''}</td>
+          <td>${item.descrizione || ''}</td>
+          <td>${eur(item.base_gara_eur)}</td>
+          <td>${eur(item.post_gara_eur)}</td>
+          <td>${eur(item.variante_eur)}</td>
+          <td>${eur(item.diff_variante_vs_post_gara_eur)}</td>
+        `;
+        rowsBCD.appendChild(tr);
+      });
+
       const fonte = data.fonte || 'Confronto quadri economici';
       document.getElementById('fonte-pill').textContent = fonte;
       document.getElementById('note').innerHTML = `${data.note || ''}${data.fonte_url ? ` Fonte: <a href="${data.fonte_url}" target="_blank" rel="noopener noreferrer">${data.fonte_url}</a>.` : ''}`;
@@ -184,6 +219,7 @@
     .catch(()=>{
       document.getElementById('rows').innerHTML = '<tr><td colspan="6">Errore nel caricamento di quadro-economico.json</td></tr>';
       document.getElementById('rows-b').innerHTML = '<tr><td colspan="6">Errore nel caricamento di quadro-economico.json</td></tr>';
+      document.getElementById('rows-bcd').innerHTML = '<tr><td colspan="6">Errore nel caricamento di quadro-economico.json</td></tr>';
     });
 </script>
 </body>

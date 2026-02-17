@@ -115,7 +115,7 @@
       "diff_variante_vs_post_gara_eur": 185090.71
     }
   ],
-  "note": "Valori riportati dal prospetto di confronto quadri economici allegato alla Delibera CA_066. Dove la leggibilità del prospetto non era perfetta, i valori sono stati mantenuti coerenti con il quadro forniture già validato in repository. Sono state aggiunte anche le voci B in forma di totale B; il dettaglio B.1..B.n aggiornabile nella sezione dettaglio_voci_b_senza_iva.",
+  "note": "Valori riportati dal prospetto di confronto quadri economici allegato alla Delibera CA_066. Dove la leggibilità del prospetto non era perfetta, i valori sono stati mantenuti coerenti con il quadro forniture già validato in repository. Sono state aggiunte anche le voci B in forma di totale B; il dettaglio B.1..B.n aggiornabile nella sezione dettaglio_voci_b_senza_iva. Sezione dedicata per voci B.3, B.4, B.5, B.15, C, D letta direttamente dal JSON.",
   "confronto_voci_b_senza_iva": [
     {
       "voce": "B totale somme a disposizione",
@@ -136,5 +136,55 @@
     "totale_b_variante_eur": 2347770.17
   },
   "ultimo_aggiornamento": "2026-02-17",
-  "dettaglio_voci_b_senza_iva": []
+  "dettaglio_voci_b_senza_iva": [],
+  "voci_bcd_senza_iva": [
+    {
+      "voce": "B.3",
+      "descrizione": "Da compilare da quadro economico ufficiale",
+      "base_gara_eur": null,
+      "post_gara_eur": null,
+      "variante_eur": null,
+      "diff_variante_vs_post_gara_eur": null
+    },
+    {
+      "voce": "B.4",
+      "descrizione": "Da compilare da quadro economico ufficiale",
+      "base_gara_eur": null,
+      "post_gara_eur": null,
+      "variante_eur": null,
+      "diff_variante_vs_post_gara_eur": null
+    },
+    {
+      "voce": "B.5",
+      "descrizione": "Da compilare da quadro economico ufficiale",
+      "base_gara_eur": null,
+      "post_gara_eur": null,
+      "variante_eur": null,
+      "diff_variante_vs_post_gara_eur": null
+    },
+    {
+      "voce": "B.15",
+      "descrizione": "Da compilare da quadro economico ufficiale",
+      "base_gara_eur": null,
+      "post_gara_eur": null,
+      "variante_eur": null,
+      "diff_variante_vs_post_gara_eur": null
+    },
+    {
+      "voce": "C",
+      "descrizione": "Da compilare da quadro economico ufficiale",
+      "base_gara_eur": null,
+      "post_gara_eur": null,
+      "variante_eur": null,
+      "diff_variante_vs_post_gara_eur": null
+    },
+    {
+      "voce": "D",
+      "descrizione": "Da compilare da quadro economico ufficiale",
+      "base_gara_eur": null,
+      "post_gara_eur": null,
+      "variante_eur": null,
+      "diff_variante_vs_post_gara_eur": null
+    }
+  ]
 }
