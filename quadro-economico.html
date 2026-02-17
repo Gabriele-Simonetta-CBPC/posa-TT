@@ -24,33 +24,51 @@
     .navlink{ color:#111; text-decoration:none; font-weight:700; }
     .navlink:hover{ background:#e9edf2; }
     .logos{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; justify-content:flex-end; }
-    .logos img{ height:40px; border:1px solid #e8ebf1; border-radius:10px; padding:6px 8px; background:#fff; }
 
     main{ max-width:1280px; margin:0 auto; padding:10px; }
-    .panel{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:10px; }
+    .panel{ background:#fff; border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:10px; margin-bottom:12px; }
     .h{ font-size:16px; font-weight:700; margin-bottom:8px; }
     .hint{ font-size:12px; color:var(--muted); margin-bottom:10px; }
 
+    /* Cards quadri */
     .cards{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:10px; }
     .card{ border:1px solid var(--border); border-radius:12px; background:#fff; padding:10px; }
     .k{ font-size:12px; color:var(--muted); }
     .v{ font-size:24px; font-weight:700; margin-top:6px; line-height:1.15; color:var(--chart); }
     .s{ font-size:12px; color:#4d535e; margin-top:6px; line-height:1.35; }
 
+    /* Tabelle */
     .tableWrap{ border:1px solid var(--border); border-radius:12px; overflow:auto; margin-top:10px; }
-    table{ width:100%; border-collapse:collapse; min-width:960px; font-size:12px; }
+    table{ width:100%; border-collapse:collapse; min-width:800px; font-size:12px; }
     th,td{ padding:10px; border-bottom:1px solid #eceff4; text-align:right; }
-    th{ background:#fff; position:sticky; top:0; }
+    th{ background:#f8f9fb; position:sticky; top:0; font-weight:700; color:#2c3038; }
     th:first-child, td:first-child, th:nth-child(2), td:nth-child(2){ text-align:left; }
     tr:last-child td{ border-bottom:0; }
+    tbody tr:hover td{ background:#f5f7fa; }
+    .tot-row td{ font-weight:700; background:#f0f3f8; border-top:2px solid #d0d7e4; }
+    .pos{ color:#167a45; }
+    .neg{ color:#c0392b; }
 
+    /* Ripartizione finale */
+    .ripart-grid{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:10px; }
+    .ripart-card{ border:1px solid var(--border); border-radius:12px; padding:10px; background:#fff; }
+    .ripart-card .label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+    .ripart-card .amount{ font-size:22px; font-weight:700; color:var(--chart); margin-top:4px; }
+    .ripart-card .sub{ font-size:11px; color:#5f6570; margin-top:4px; }
+
+    /* Note */
     .note{ margin-top:10px; font-size:12px; color:var(--muted); border:1px dashed #d8dde5; background:#fbfcfe; border-radius:12px; padding:8px 10px; }
     code{ background:#f6f6f6; border:1px solid #ececec; border-radius:6px; padding:2px 6px; }
 
-    @media (max-width:1100px){ .cards{ grid-template-columns:1fr; } .meta-static{ margin-left:0; } .logos img{height:34px;} .title b{font-size:19px;} }
+    @media (max-width:1100px){
+      .cards,.ripart-grid{ grid-template-columns:1fr; }
+      .meta-static{ margin-left:0; }
+      .title b{ font-size:19px; }
+    }
   </style>
 </head>
 <body>
+
 <header>
   <div class="top">
     <div class="title">
@@ -63,164 +81,279 @@
           <a class="pill navlink" href="forniture.html">Forniture</a>
         </div>
         <div class="meta-static">
-          <span class="pill" id="fonte-pill">Confronto quadri economici</span>
+          <span class="pill">Confronto quadri economici da Delibera CA_066 (26/02/2025)</span>
         </div>
       </div>
-    </div>
-
-    <div class="logos">
-      <img src="assets/italiadomani.png" alt="Italia Domani">
-      <img src="assets/masaf.png" alt="MASAF">
-      <img src="assets/nextgenerationeu.png" alt="NextGenerationEU">
-      <img src="assets/consorzio.png" alt="Consorzio">
     </div>
   </div>
 </header>
 
 <main>
+
+  <!-- SEZIONE: Quadri economici sintetici -->
   <section class="panel">
     <div class="h">Confronto quadri economici</div>
-    <div class="hint">Dati caricati da <code>quadro-economico.json</code> (Delibera CA_066).</div>
+    <div class="hint">Fonte: Delibera CA_066 del 26/02/2025 &mdash; CUP <code>G99J21006930005</code></div>
 
-    <div class="cards" id="cards"></div>
+    <div class="cards">
+      <article class="card">
+        <div class="k">QE-01</div>
+        <div class="s"><b>PE a base di gara (Delibera n. 409 del 29/11/2023)</b></div>
+        <div class="v">€ 6.391.016,82</div>
+        <div class="s">Spese senza IVA</div>
+        <div class="s">IVA: <b>€ 1.275.890,13</b></div>
+        <div class="s">Totale con IVA: <b>€ 7.666.906,95</b></div>
+      </article>
+      <article class="card">
+        <div class="k">QE-02</div>
+        <div class="s"><b>Aggiornamento post gara (Delibera n. 300 del 16/10/2024)</b></div>
+        <div class="v">€ 6.391.016,82</div>
+        <div class="s">Spese senza IVA</div>
+        <div class="s">IVA: <b>€ 1.275.890,13</b></div>
+        <div class="s">Totale con IVA: <b>€ 7.666.906,95</b></div>
+      </article>
+      <article class="card">
+        <div class="k">QE-03</div>
+        <div class="s"><b>Perizia variante</b></div>
+        <div class="v">€ 6.391.016,82</div>
+        <div class="s">Spese senza IVA</div>
+        <div class="s">IVA: <b>€ 1.275.890,13</b></div>
+        <div class="s">Totale con IVA: <b>€ 7.666.906,95</b></div>
+      </article>
+    </div>
+  </section>
 
+  <!-- SEZIONE A: Lotti (confronto) -->
+  <section class="panel">
+    <div class="h">Sezione A — Forniture per lotto (senza IVA)</div>
     <div class="tableWrap">
       <table>
         <thead>
           <tr>
             <th>Lotto</th>
             <th>Descrizione</th>
-            <th>Base gara (senza IVA)</th>
-            <th>Post gara (senza IVA)</th>
-            <th>Variante (senza IVA)</th>
-            <th>Variante - Post gara</th>
+            <th>Base gara</th>
+            <th>Post gara</th>
+            <th>Variante</th>
+            <th>Variante − Post gara</th>
           </tr>
         </thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
-
-    <div class="h" style="margin-top:12px;">Voci B (somme a disposizione)</div>
-    <div class="tableWrap">
-      <table>
-        <thead>
+        <tbody>
           <tr>
-            <th>Voce B</th>
-            <th>Descrizione</th>
-            <th>Base gara (senza IVA)</th>
-            <th>Post gara (senza IVA)</th>
-            <th>Variante (senza IVA)</th>
-            <th>Variante - Post gara</th>
+            <td>1</td>
+            <td>Tubazione PVC DN 630</td>
+            <td>€ 2.996.476,00</td>
+            <td>€ 2.182.033,82</td>
+            <td>€ 2.356.044,50</td>
+            <td class="pos">+ € 174.010,68</td>
           </tr>
-        </thead>
-        <tbody id="rows-b"></tbody>
+          <tr>
+            <td>2</td>
+            <td>Manufatti in acciaio e saracinesche di linea</td>
+            <td>€ 534.644,00</td>
+            <td>€ 534.590,54</td>
+            <td>€ 534.590,54</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>Stazioni TLC e misuratori di portata</td>
+            <td>€ 497.878,00</td>
+            <td>€ 448.090,20</td>
+            <td>€ 448.090,20</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>Tubazioni mobili complete di raccordi</td>
+            <td>€ 313.500,00</td>
+            <td>€ 238.322,70</td>
+            <td>€ 238.322,70</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>Elettropompe</td>
+            <td>€ 278.684,00</td>
+            <td>€ 232.859,99</td>
+            <td>€ 243.940,02</td>
+            <td class="pos">+ € 11.080,03</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>Attrezzature elettriche</td>
+            <td>€ 189.000,00</td>
+            <td>€ 77.490,00</td>
+            <td>€ 77.490,00</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>Materiali inerti</td>
+            <td>€ 109.095,00</td>
+            <td>€ 93.461,69</td>
+            <td>€ 93.461,69</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>Materiali edili</td>
+            <td>€ 36.652,00</td>
+            <td>€ 36.652,00</td>
+            <td>€ 36.652,00</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>Serbatoio in PE corrugato</td>
+            <td>€ 16.475,00</td>
+            <td>€ 14.700,00</td>
+            <td>€ 14.700,00</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr class="tot-row">
+            <td colspan="2">Totale Sezione A</td>
+            <td>€ 5.374.006,15</td>
+            <td>€ 4.213.918,10</td>
+            <td>€ 4.399.008,81</td>
+            <td class="pos">+ € 185.090,71</td>
+          </tr>
+        </tbody>
       </table>
     </div>
+  </section>
 
-
-
-    <div class="h" style="margin-top:12px;">Voci richieste (B.3, B.4, B.5, B.15, C, D)</div>
+  <!-- SEZIONE B: Somme a disposizione -->
+  <section class="panel">
+    <div class="h">Sezione B — Somme a disposizione (senza IVA)</div>
     <div class="tableWrap">
       <table>
         <thead>
           <tr>
             <th>Voce</th>
             <th>Descrizione</th>
-            <th>Base gara (senza IVA)</th>
-            <th>Post gara (senza IVA)</th>
-            <th>Variante (senza IVA)</th>
-            <th>Variante - Post gara</th>
+            <th>Base gara</th>
+            <th>Post gara</th>
+            <th>Variante</th>
+            <th>Variante − Post gara</th>
           </tr>
         </thead>
-        <tbody id="rows-bcd"></tbody>
+        <tbody>
+          <tr>
+            <td>b.3</td>
+            <td>Allacciamenti pubblici servizi</td>
+            <td>€ 100.000,00</td>
+            <td>€ 100.000,00</td>
+            <td>€ 100.000,00</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>b.4</td>
+            <td>Imprevisti</td>
+            <td>€ 161.220,17</td>
+            <td>€ 210.695,91</td>
+            <td>€ 176.703,62</td>
+            <td class="neg">− € 33.992,29</td>
+          </tr>
+          <tr>
+            <td>b.5</td>
+            <td>Acquisizione aree o immobili</td>
+            <td>€ 591.516,28</td>
+            <td>€ 591.516,28</td>
+            <td>€ 591.516,28</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>b.15</td>
+            <td>Interferenze</td>
+            <td>€ 17.250,00</td>
+            <td>€ 17.250,00</td>
+            <td>€ 17.250,00</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr class="tot-row">
+            <td colspan="2">Totale Sezione B</td>
+            <td>€ 869.986,45</td>
+            <td>€ 919.462,19</td>
+            <td>€ 885.469,90</td>
+            <td class="neg">− € 33.992,29</td>
+          </tr>
+        </tbody>
       </table>
     </div>
-
-    <div class="note" id="note"></div>
   </section>
+
+  <!-- SEZIONE C e D -->
+  <section class="panel">
+    <div class="h">Sezione C e D — Spese generali ed economie di ribasso (senza IVA)</div>
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Voce</th>
+            <th>Descrizione</th>
+            <th>Base gara</th>
+            <th>Post gara</th>
+            <th>Variante</th>
+            <th>Variante − Post gara</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>C</td>
+            <td>Spese generali</td>
+            <td>€ 147.024,22</td>
+            <td>€ 232.024,22</td>
+            <td>€ 232.024,22</td>
+            <td>€ 0,00</td>
+          </tr>
+          <tr>
+            <td>D</td>
+            <td>Economie / ribasso d'asta</td>
+            <td>€ 0,00</td>
+            <td>€ 1.025.612,31</td>
+            <td>€ 874.513,89</td>
+            <td class="neg">− € 151.098,42</td>
+          </tr>
+          <tr class="tot-row">
+            <td colspan="2">Importo complessivo (A+B+C−D)</td>
+            <td>€ 6.391.016,82</td>
+            <td>€ 6.391.016,82</td>
+            <td>€ 6.391.016,82</td>
+            <td>€ 0,00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- RIPARTIZIONE FINALE -->
+  <section class="panel">
+    <div class="h">Ripartizione finale con IVA</div>
+    <div class="ripart-grid">
+      <div class="ripart-card">
+        <div class="label">Importo totale con IVA</div>
+        <div class="amount">€ 7.666.906,95</div>
+        <div class="sub">IVA inclusa (22% su lavori, aliquote differenziate)</div>
+      </div>
+      <div class="ripart-card">
+        <div class="label">Di cui PNRR</div>
+        <div class="amount">€ 6.600.000,00</div>
+        <div class="sub">Finanziamento NextGenerationEU – M2C4 Inv. 4.3</div>
+      </div>
+      <div class="ripart-card">
+        <div class="label">Di cui FOI (fondi propri)</div>
+        <div class="amount">€ 1.066.906,95</div>
+        <div class="sub">Quota a carico del Consorzio</div>
+      </div>
+    </div>
+
+    <div class="note" style="margin-top:12px;">
+      Valori riportati dal prospetto di confronto quadri economici allegato alla Delibera CA_066.
+      Fonte: <a href="https://www.cbpiacenza.it/attachments/article/1726/CA_066.pdf" target="_blank" rel="noopener noreferrer">https://www.cbpiacenza.it/attachments/article/1726/CA_066.pdf</a>.
+    </div>
+  </section>
+
 </main>
-
-<script>
-  function eur(v){ if(v===null||v===undefined||v==='') return 'n.d.'; return new Intl.NumberFormat('it-IT', {style:'currency', currency:'EUR'}).format(Number(v)); }
-
-  fetch('quadro-economico.json')
-    .then(r=>r.json())
-    .then(data=>{
-      const cards = document.getElementById('cards');
-      const rows = document.getElementById('rows');
-      const rowsB = document.getElementById('rows-b');
-      const rowsBCD = document.getElementById('rows-bcd');
-      cards.innerHTML = '';
-      rows.innerHTML = '';
-      rowsB.innerHTML = '';
-      rowsBCD.innerHTML = '';
-
-      const quadri = Array.isArray(data.quadri) ? data.quadri : [];
-      quadri.forEach(q => {
-        const c = document.createElement('article');
-        c.className = 'card';
-        c.innerHTML = `
-          <div class="k">${q.codice || ''}</div>
-          <div class="s"><b>${q.nome || ''}</b></div>
-          <div class="v">${eur(q.spese_senza_iva_eur)}</div>
-          <div class="s">Spese senza IVA</div>
-          <div class="s">IVA: <b>${eur(q.iva_eur)}</b></div>
-          <div class="s">Totale con IVA: <b>${eur(q.spese_con_iva_eur)}</b></div>
-        `;
-        cards.appendChild(c);
-      });
-
-      const confronto = Array.isArray(data.confronto_lotti_senza_iva) ? data.confronto_lotti_senza_iva : [];
-      confronto.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.lotto || ''}</td>
-          <td>${item.descrizione || ''}</td>
-          <td>${eur(item.base_gara_eur)}</td>
-          <td>${eur(item.post_gara_eur)}</td>
-          <td>${eur(item.variante_eur)}</td>
-          <td>${eur(item.diff_variante_vs_post_gara_eur)}</td>
-        `;
-        rows.appendChild(tr);
-      });
-
-      const confrontoB = Array.isArray(data.confronto_voci_b_senza_iva) ? data.confronto_voci_b_senza_iva : [];
-      confrontoB.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.voce || ''}</td>
-          <td>${item.descrizione || ''}</td>
-          <td>${eur(item.base_gara_eur)}</td>
-          <td>${eur(item.post_gara_eur)}</td>
-          <td>${eur(item.variante_eur)}</td>
-          <td>${eur(item.diff_variante_vs_post_gara_eur)}</td>
-        `;
-        rowsB.appendChild(tr);
-      });
-
-      const vociBCD = Array.isArray(data.voci_bcd_senza_iva) ? data.voci_bcd_senza_iva : [];
-      vociBCD.forEach(item => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${item.voce || ''}</td>
-          <td>${item.descrizione || ''}</td>
-          <td>${eur(item.base_gara_eur)}</td>
-          <td>${eur(item.post_gara_eur)}</td>
-          <td>${eur(item.variante_eur)}</td>
-          <td>${eur(item.diff_variante_vs_post_gara_eur)}</td>
-        `;
-        rowsBCD.appendChild(tr);
-      });
-
-      const fonte = data.fonte || 'Confronto quadri economici';
-      document.getElementById('fonte-pill').textContent = fonte;
-      document.getElementById('note').innerHTML = `${data.note || ''}${data.fonte_url ? ` Fonte: <a href="${data.fonte_url}" target="_blank" rel="noopener noreferrer">${data.fonte_url}</a>.` : ''}`;
-    })
-    .catch(()=>{
-      document.getElementById('rows').innerHTML = '<tr><td colspan="6">Errore nel caricamento di quadro-economico.json</td></tr>';
-      document.getElementById('rows-b').innerHTML = '<tr><td colspan="6">Errore nel caricamento di quadro-economico.json</td></tr>';
-      document.getElementById('rows-bcd').innerHTML = '<tr><td colspan="6">Errore nel caricamento di quadro-economico.json</td></tr>';
-    });
-</script>
 </body>
 </html>
