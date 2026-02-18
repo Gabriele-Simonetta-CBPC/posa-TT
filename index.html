@@ -251,6 +251,14 @@
 
   // Se il 100% ti va nel verso sbagliato, lascia true
   const REVERSE_PROGRESS = true;
+  const SPECIAL_PROGRESS = {
+    "4": {
+      fixedLaidSegment: [
+        [9.52350346, 44.99035957],
+        [9.51891206, 44.98589941]
+      ]
+    }
+  };
 
   const PIPE_DIAMETER_M = 0.63;
   const SPECIAL_LONG_M = 3;
@@ -507,12 +515,26 @@
   }
 
   // Punto avanzamento
-  function progressPoint(feature, done, tot){
+  function progressPoint(feature, done, tot, troncoId){
     const perc = (tot > 0) ? Math.min(done/tot, 1) : 0;
     const totalKm = turf.length(feature, {units:"kilometers"});
     if(!Number.isFinite(totalKm) || totalKm <= 0) return { ok:false, perc };
 
-    const eff = REVERSE_PROGRESS ? (1 - perc) : perc;
+    let effectiveDoneKm = totalKm * perc;
+    if(REVERSE_PROGRESS){
+      const conf = SPECIAL_PROGRESS[String(troncoId)];
+      if(conf?.fixedLaidSegment?.length === 2){
+        const a = turf.point(conf.fixedLaidSegment[0]);
+        const b = turf.point(conf.fixedLaidSegment[1]);
+        const ap = turf.nearestPointOnLine(feature, a, { units:"kilometers" });
+        const bp = turf.nearestPointOnLine(feature, b, { units:"kilometers" });
+        const fixedKm = Math.abs((ap.properties?.location || 0) - (bp.properties?.location || 0));
+        effectiveDoneKm = Math.max(0, effectiveDoneKm - fixedKm);
+      }
+    }
+
+    const effPerc = Math.max(0, Math.min(effectiveDoneKm / totalKm, 1));
+    const eff = REVERSE_PROGRESS ? (1 - effPerc) : effPerc;
     const distKm = totalKm * eff;
 
     try{
@@ -524,31 +546,54 @@
   }
 
   // Segmenti: posato (tratteggio) e residuo (pieno) SENZA sovrapposizione
-  function splitSegments(feature, done, tot){
+  function splitSegments(feature, done, tot, troncoId){
     const totalKm = turf.length(feature, { units:"kilometers" });
-    if(!Number.isFinite(totalKm) || totalKm <= 0 || tot <= 0) return { segPosato:null, segResiduo:null };
+    if(!Number.isFinite(totalKm) || totalKm <= 0 || tot <= 0) return { segPosati:[], segResidui:[] };
 
     const perc = Math.min(done / tot, 1);
     const doneKm = totalKm * perc;
+    const conf = SPECIAL_PROGRESS[String(troncoId)];
 
     if(perc >= 1){
-      return { segPosato: feature, segResiduo: null };
+      return { segPosati: [feature], segResidui: [] };
     }
 
     try{
+      if(REVERSE_PROGRESS && conf?.fixedLaidSegment?.length === 2){
+        const a = turf.point(conf.fixedLaidSegment[0]);
+        const b = turf.point(conf.fixedLaidSegment[1]);
+        const ap = turf.nearestPointOnLine(feature, a, { units:"kilometers" });
+        const bp = turf.nearestPointOnLine(feature, b, { units:"kilometers" });
+        const fixedStart = Math.min((ap.properties?.location || 0), (bp.properties?.location || 0));
+        const fixedEnd = Math.max((ap.properties?.location || 0), (bp.properties?.location || 0));
+        const fixedKm = Math.max(0, fixedEnd - fixedStart);
+        const reverseDoneKm = Math.max(0, doneKm - fixedKm);
+        const reverseStartKm = Math.max(totalKm - reverseDoneKm, 0);
+
+        const segPosati = [];
+        const segResidui = [];
+
+        if(fixedKm > 0) segPosati.push(turf.lineSliceAlong(feature, fixedStart, fixedEnd, { units:"kilometers" }));
+        if(reverseDoneKm > 0) segPosati.push(turf.lineSliceAlong(feature, reverseStartKm, totalKm, { units:"kilometers" }));
+        if(fixedStart > 0) segResidui.push(turf.lineSliceAlong(feature, 0, fixedStart, { units:"kilometers" }));
+        if(reverseStartKm > fixedEnd) segResidui.push(turf.lineSliceAlong(feature, fixedEnd, reverseStartKm, { units:"kilometers" }));
+
+        return { segPosati, segResidui };
+      }
+
       if(!REVERSE_PROGRESS){
         return {
-          segPosato:  turf.lineSliceAlong(feature, 0, doneKm, { units:"kilometers" }),
-          segResiduo: turf.lineSliceAlong(feature, doneKm, totalKm, { units:"kilometers" })
+          segPosati:  [turf.lineSliceAlong(feature, 0, doneKm, { units:"kilometers" })],
+          segResidui: [turf.lineSliceAlong(feature, doneKm, totalKm, { units:"kilometers" })]
         };
       }else{
         return {
-          segPosato:  turf.lineSliceAlong(feature, Math.max(totalKm - doneKm, 0), totalKm, { units:"kilometers" }),
-          segResiduo: turf.lineSliceAlong(feature, 0, Math.max(totalKm - doneKm, 0), { units:"kilometers" })
+          segPosati:  [turf.lineSliceAlong(feature, Math.max(totalKm - doneKm, 0), totalKm, { units:"kilometers" })],
+          segResidui: [turf.lineSliceAlong(feature, 0, Math.max(totalKm - doneKm, 0), { units:"kilometers" })]
         };
       }
     }catch(e){
-      return { segPosato:null, segResiduo:null };
+      return { segPosati:[], segResidui:[] };
     }
   }
 
@@ -781,21 +826,21 @@
 
       layersByTronco[id] = layersByTronco[id] || [];
 
-      const { segPosato, segResiduo } = splitSegments(f, r.done, r.tot);
+      const { segPosati, segResidui } = splitSegments(f, r.done, r.tot, r.id);
 
-      if(segResiduo){
+      segResidui.forEach(segResiduo => {
         const layerResiduo = L.geoJSON(segResiduo, { style: { color: col, weight: pipeWeightPx(map.getCenter().lat), opacity: 1 } }).addTo(map);
         lineLayers.push({ layer: layerResiduo, color: col, posato: false });
         layersByTronco[id].push(layerResiduo);
-      }
+      });
 
-      if(segPosato){
+      segPosati.forEach(segPosato => {
         const layerPosato = L.geoJSON(segPosato, { style: { color: col, weight: pipeWeightPx(map.getCenter().lat), opacity: 0.92, dashArray: "10 8" } }).addTo(map);
         lineLayers.push({ layer: layerPosato, color: col, posato: true });
         layersByTronco[id].push(layerPosato);
-      }
+      });
 
-      const res = progressPoint(f, r.done, r.tot);
+      const res = progressPoint(f, r.done, r.tot, r.id);
       if(res.ok && res.point){
         const [lng, lat] = res.point.geometry.coordinates;
         const p = L.circleMarker([lat, lng], { radius: 5, weight: 1, color: col, fillColor: col, fillOpacity: 1 })
