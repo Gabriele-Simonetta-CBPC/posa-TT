@@ -17,7 +17,7 @@
       "quantita_consegnata": 2356044.5,
       "quantita_posata": 2356044.5,
       "stato_avanzamento": "Completato",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 486 del 03/12/2024.",
+      "note": " Delibera: 486 del 03/12/2024.",
       "ultima_delibera": "486 del 03/12/2024",
       "cod_gara": "G03865",
       "operatore": "Consorzio Stabile Grifone",
@@ -38,7 +38,7 @@
       "quantita_consegnata": 481131.49,
       "quantita_posata": 481131.49,
       "stato_avanzamento": "In avanzamento",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 331 del 13/11/2024.",
+      "note": " Delibera: 331 del 13/11/2024.",
       "ultima_delibera": "331 del 13/11/2024",
       "cod_gara": "G04324",
       "operatore": "Acquafert srl",
@@ -59,7 +59,7 @@
       "quantita_consegnata": 340548.55,
       "quantita_posata": 340548.55,
       "stato_avanzamento": "In avanzamento",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 207 del 21/05/2025.",
+      "note": " Delibera: 207 del 21/05/2025.",
       "ultima_delibera": "207 del 21/05/2025",
       "cod_gara": "G04325",
       "operatore": "Mottech-Italia srl",
@@ -80,7 +80,7 @@
       "quantita_consegnata": 238322.7,
       "quantita_posata": 238322.7,
       "stato_avanzamento": "Completato",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 484 del 03/12/2025.",
+      "note": " Delibera: 484 del 03/12/2025.",
       "ultima_delibera": "484 del 03/12/2025",
       "cod_gara": "G04326",
       "operatore": "Consorzio Agrario Terrepadane scarl",
@@ -101,7 +101,7 @@
       "quantita_consegnata": 0.0,
       "quantita_posata": 0.0,
       "stato_avanzamento": "Da avviare",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: n.d..",
+      "note": " Delibera: n.d..",
       "cod_gara": "G03865",
       "operatore": "GPG srl",
       "base_gara_eur": 278684.0,
@@ -122,7 +122,7 @@
       "quantita_consegnata": 77490.0,
       "quantita_posata": 77490.0,
       "stato_avanzamento": "Completato",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 389 del 11/12/2024.",
+      "note": " Delibera: 389 del 11/12/2024.",
       "ultima_delibera": "389 del 11/12/2024",
       "cod_gara": "G04327",
       "operatore": "Rotork Controls Italia srl",
@@ -143,7 +143,7 @@
       "quantita_consegnata": 57871.48,
       "quantita_posata": 57871.48,
       "stato_avanzamento": "In avanzamento",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 50 del 03/02/2026.",
+      "note": " Delibera: 50 del 03/02/2026.",
       "ultima_delibera": "50 del 03/02/2026",
       "cod_gara": "G04328",
       "operatore": "Boccenti Giovanni & Figli srl",
@@ -164,7 +164,7 @@
       "quantita_consegnata": 28529.92,
       "quantita_posata": 28529.92,
       "stato_avanzamento": "In avanzamento",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 49 del 11/02/2026.",
+      "note": " Delibera: 49 del 11/02/2026.",
       "cod_gara": "G04397",
       "operatore": "Davanzo srl",
       "base_gara_eur": 36652.0,
@@ -185,7 +185,7 @@
       "quantita_consegnata": 14700.0,
       "quantita_posata": 14700.0,
       "stato_avanzamento": "Completato",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 227 del 04/06/2025.",
+      "note": " Delibera: 227 del 04/06/2025.",
       "cod_gara": "G04398",
       "operatore": "Consorzio Stabile Grifone",
       "base_gara_eur": 16475.0,
@@ -197,7 +197,7 @@
       "ultima_delibera": "227 del 04/06/2025"
     },
     {
-      "id": "F010",
+      "id": "S010",
       "lotto": 10,
       "cig": "958584163C",
       "voce": "Servizio bonifica tubazioni in cemento amianto",
@@ -206,7 +206,7 @@
       "quantita_consegnata": 355717.16,
       "quantita_posata": 355717.16,
       "stato_avanzamento": "Completato",
-      "note": "Aggiornamento liquidazione al 17/02/2026. Delibera: 75 del 11/02/2026.",
+      "note": " Delibera: 75 del 11/02/2026.",
       "cod_gara": "G03876",
       "operatore": "Elios srl",
       "base_gara_eur": 401602.15,
@@ -258,10 +258,10 @@
       "lotto": 9,
       "cig": "A017D8362D",
       "oggetto": "Approvazione stato forniture - Lotto 9",
-      "saf_numero": null,
+      "saf_numero": 1,
       "contabilizzato_eur": 14700.0,
       "percentuale_avanzamento": 100.0,
-      "url": null
+      "url": "https://www.cbpiacenza.it/attachments/article/1726/CA_227.pdf"
     },
     {
       "numero": "484 del 03/12/2025",
@@ -302,10 +302,10 @@
       "lotto": 8,
       "cig": "A012E494F1",
       "oggetto": "Approvazione stato forniture - Lotto 8",
-      "saf_numero": null,
+      "saf_numero": 7,
       "contabilizzato_eur": 28529.92,
       "percentuale_avanzamento": 77.84,
-      "url": null
+      "url": "https://www.cbpiacenza.it/attachments/article/1748/CA_0049.pdf"
     },
     {
       "numero": "75 del 11/02/2026",
@@ -313,10 +313,10 @@
       "lotto": 10,
       "cig": "958584163C",
       "oggetto": "Approvazione stato forniture - Lotto 10",
-      "saf_numero": null,
+      "saf_numero": 2,
       "contabilizzato_eur": 355717.16,
       "percentuale_avanzamento": 100.0,
-      "url": null
+      "url": "https://www.cbpiacenza.it/attachments/article/1748/CA_0075.pdf"
     }
   ]
 }
