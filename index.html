@@ -864,7 +864,7 @@
   .then(([geo, avanzRaw, resetRaw, pezzi]) => {
 
     const { avanz, used: resetUsed } = applyResetProgressiva(avanzRaw, resetRaw);
-    const suffix = resetUsed ? " (reset progressiva attivo)" : "";
+    const suffix = resetUsed ? " (progressiva identificata con rilievo topografico)" : "";
     setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON") + suffix);
 
     baseDate = avanz._baseline_date || "2026-01-27";
