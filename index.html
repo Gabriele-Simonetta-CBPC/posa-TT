@@ -815,13 +815,13 @@
       const id = idMap.get(normalized) || normalized;
       if(!next[id]) return;
 
-      // done nel reset è RELATIVO al nuovo punto: mantiene totali/%/tratteggio coerenti.
-      const relDone = Number(item.done);
-      if(Number.isFinite(relDone)){
-        const baseDone = Number(next[id].done) || 0;
+      // done nel reset è il valore da usare per il RICALCOLO (override),
+      // così tratteggio, % e complessivo si basano interamente sul reset attivo.
+      const resetDone = Number(item.done);
+      if(Number.isFinite(resetDone)){
         const tot = Number(next[id].tot) || 0;
-        const mergedDone = Math.max(0, baseDone + Math.max(0, relDone));
-        next[id] = { ...next[id], done: Math.min(mergedDone, tot || mergedDone) };
+        const boundedDone = Math.max(0, Math.min(resetDone, tot || resetDone));
+        next[id] = { ...next[id], done: boundedDone };
         touched = true;
       }
 
