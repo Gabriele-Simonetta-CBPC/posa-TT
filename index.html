@@ -783,7 +783,8 @@
 
     const resetDate = parseFlexibleDate(resetData._updated || "");
     const avanzDate = parseFlexibleDate(avanz._updated || "");
-    if(!resetDate || !avanzDate || resetDate.getTime() <= avanzDate.getTime()) return { avanz, used:false };
+    const forceApply = resetData._force === true;
+    if(!forceApply && resetDate && avanzDate && resetDate.getTime() <= avanzDate.getTime()) return { avanz, used:false };
 
     const next = { ...avanz };
     const existingIds = Object.keys(next).filter(k => !k.startsWith("_"));
