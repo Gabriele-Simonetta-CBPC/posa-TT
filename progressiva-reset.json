@@ -1,0 +1,54 @@
+{
+  "_updated": "2026-02-24 08:30",
+  "_force": true,
+  "_note": "File unico reset/progressiva. I done qui presenti sono usati come valori di ricalcolo (override) quando il reset è attivo; forceProgressPoint mantiene il punto di avanzamento. Con _force=true il reset viene applicato sempre.",
+  "PV": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.4545888,
+      45.0084681
+    ]
+  },
+  "1": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.45164625,
+      45.00040717
+    ]
+  },
+  "2": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.47240311,
+      44.98454218
+    ]
+  },
+  "3-1": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.51091612,
+      44.9903499
+    ]
+  },
+  "3-2": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.49696318,
+      44.99361772
+    ]
+  },
+  "4": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.5388638,
+      44.99038394
+    ]
+  },
+  "5": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.5581906,
+      44.98519947
+    ]
+  }
+}
