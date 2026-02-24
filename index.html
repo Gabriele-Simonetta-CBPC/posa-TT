@@ -991,7 +991,7 @@
     const cleanFeatures = (geo.features || []).map(sanitizeFeature).filter(Boolean);
 
     const { avanz, used: resetUsed } = applyResetProgressiva(avanzRaw, resetRaw, cleanFeatures);
-    const suffix = resetUsed ? " (reset progressiva attivo)" : "";
+    const suffix = resetUsed ? " (Progressiva identificata tramite rilievo topografico)" : "";
     setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON") + suffix);
 
     baseDate = avanz._baseline_date || "2026-01-27";
