@@ -761,8 +761,21 @@
       return new Date(`${yyyy}-${mm}-${dd}T${hh}:${mi}:00`);
     }
 
+    const m3 = txt.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
+    if(m3){
+      const [,dd,mm,yyyy,hh="00",mi="00"] = m3;
+      return new Date(`${yyyy}-${mm}-${dd}T${hh}:${mi}:00`);
+    }
+
     const d = new Date(txt);
     return Number.isFinite(d.getTime()) ? d : null;
+  }
+
+  function normalizeTroncoId(id){
+    return String(id || "")
+      .trim()
+      .replace(/^tronco\s*/i, "")
+      .replace(/_/g, "-");
   }
 
   function applyResetProgressiva(avanz, resetData){
@@ -773,21 +786,50 @@
     if(!resetDate || !avanzDate || resetDate.getTime() <= avanzDate.getTime()) return { avanz, used:false };
 
     const next = { ...avanz };
-    Object.keys(resetData).forEach(id => {
-      if(id.startsWith("_")) return;
-      const item = resetData[id];
+    const existingIds = Object.keys(next).filter(k => !k.startsWith("_"));
+    const idMap = new Map(existingIds.map(k => [normalizeTroncoId(k), k]));
+
+    const entries = [];
+    Object.keys(resetData).forEach(k => {
+      if(k.startsWith("_")) return;
+      entries.push([k, resetData[k]]);
+    });
+    if(Array.isArray(resetData.tronchi)){
+      resetData.tronchi.forEach(item => {
+        if(!item || typeof item !== "object") return;
+        const itemId = item.tronco ?? item.id ?? item.key;
+        if(itemId == null) return;
+        entries.push([String(itemId), item]);
+      });
+    }
+
+    let touched = false;
+    entries.forEach(([idRaw, item]) => {
       if(!item || typeof item !== "object") return;
-      const done = Number(item.done);
-      if(!next[id] || !Number.isFinite(done)) return;
-      next[id] = { ...next[id], done: Math.max(0, done) };
+      const normalized = normalizeTroncoId(idRaw);
+      const id = idMap.get(normalized) || normalized;
+      if(!next[id]) return;
+
+      // done nel reset è RELATIVO al nuovo punto: mantiene totali/%/tratteggio coerenti.
+      const relDone = Number(item.done);
+      if(Number.isFinite(relDone)){
+        const baseDone = Number(next[id].done) || 0;
+        const tot = Number(next[id].tot) || 0;
+        const mergedDone = Math.max(0, baseDone + Math.max(0, relDone));
+        next[id] = { ...next[id], done: Math.min(mergedDone, tot || mergedDone) };
+        touched = true;
+      }
 
       if(Array.isArray(item.forceProgressPoint) && item.forceProgressPoint.length === 2){
         SPECIAL_PROGRESS[String(id)] = {
           ...(SPECIAL_PROGRESS[String(id)] || {}),
           forceProgressPoint: item.forceProgressPoint
         };
+        touched = true;
       }
     });
+
+    if(!touched) return { avanz, used:false };
 
     next._updated = resetData._updated;
     return { avanz: next, used:true };
