@@ -173,6 +173,15 @@
   .special-marker.square{ border-radius:2px; }
   .special-marker.diamond{ border-radius:2px; transform:rotate(45deg); }
 
+  .overlay-footnote{
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px dashed #d9d9d9;
+    font-size:11px;
+    color:#58606b;
+    line-height:1.35;
+  }
+
   @media (max-width:720px){
     .logos img{ height:34px; }
     .overlay{ top:182px; left:14px; right:14px; width:auto; }
@@ -239,6 +248,7 @@
       <tbody id="tbody"></tbody>
     </table>
   </div>
+  <div class="overlay-footnote">I contenuti e l'impaginazione sono stati sviluppati con il supporto di strumenti di intelligenza artificiale (ChatGPT – OpenAI), con validazione e controllo finale da parte dell'autore.</div>
 </div>
 
 <script>
@@ -247,11 +257,15 @@
   const REPO_BASE = location.hostname.endsWith("github.io") ? "/posa-TT/" : "/";
   const FILE_TRONCHI = new URL("tronchi.geojson", location.origin + REPO_BASE).toString();
   const FILE_AVANZ   = new URL("avanzamento.json", location.origin + REPO_BASE).toString();
+  const FILE_PROGRESSIVA_RESET = new URL("progressiva-reset.json", location.origin + REPO_BASE).toString();
   const FILE_PEZZI   = new URL("pezzi speciali.geojson", location.origin + REPO_BASE).toString();
 
   // Se il 100% ti va nel verso sbagliato, lascia true
   const REVERSE_PROGRESS = true;
   const SPECIAL_PROGRESS = {
+    "1": {
+      forceProgressPoint: [9.45164625, 45.0004071667]
+    },
     "4": {
       fixedLaidSegment: [
         [9.52350346, 44.99035957],
@@ -517,12 +531,17 @@
   // Punto avanzamento
   function progressPoint(feature, done, tot, troncoId){
     const perc = (tot > 0) ? Math.min(done/tot, 1) : 0;
+    const conf = SPECIAL_PROGRESS[String(troncoId)];
+
+    if(conf?.forceProgressPoint?.length === 2){
+      return { ok:true, perc, point: turf.point(conf.forceProgressPoint) };
+    }
+
     const totalKm = turf.length(feature, {units:"kilometers"});
     if(!Number.isFinite(totalKm) || totalKm <= 0) return { ok:false, perc };
 
     let effectiveDoneKm = totalKm * perc;
     if(REVERSE_PROGRESS){
-      const conf = SPECIAL_PROGRESS[String(troncoId)];
       if(conf?.fixedLaidSegment?.length === 2){
         const a = turf.point(conf.fixedLaidSegment[0]);
         const b = turf.point(conf.fixedLaidSegment[1]);
@@ -726,6 +745,101 @@
     applyFilters();
   });
 
+  function parseFlexibleDate(value){
+    if(!value || typeof value !== "string") return null;
+    const txt = value.trim();
+
+    const m1 = txt.match(/^(\d{2})-(\d{2})-(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
+    if(m1){
+      const [,dd,mm,yyyy,hh="00",mi="00"] = m1;
+      return new Date(`${yyyy}-${mm}-${dd}T${hh}:${mi}:00`);
+    }
+
+    const m2 = txt.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?$/);
+    if(m2){
+      const [,yyyy,mm,dd,hh="00",mi="00"] = m2;
+      return new Date(`${yyyy}-${mm}-${dd}T${hh}:${mi}:00`);
+    }
+
+    const m3 = txt.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?$/);
+    if(m3){
+      const [,dd,mm,yyyy,hh="00",mi="00"] = m3;
+      return new Date(`${yyyy}-${mm}-${dd}T${hh}:${mi}:00`);
+    }
+
+    const d = new Date(txt);
+    return Number.isFinite(d.getTime()) ? d : null;
+  }
+
+  function normalizeTroncoId(id){
+    return String(id || "")
+      .trim()
+      .replace(/^tronco\s*/i, "")
+      .replace(/_/g, "-");
+  }
+
+  function applyResetProgressiva(avanz, resetData){
+    if(!resetData || typeof resetData !== "object") return { avanz, used:false };
+
+    const resetDate = parseFlexibleDate(resetData._updated || "");
+    const avanzDate = parseFlexibleDate(avanz._updated || "");
+    const forceApply = resetData._force === true;
+    if(!forceApply && resetDate && avanzDate && resetDate.getTime() <= avanzDate.getTime()) return { avanz, used:false };
+
+    const next = { ...avanz };
+    const existingIds = Object.keys(next).filter(k => !k.startsWith("_"));
+    const idMap = new Map(existingIds.map(k => [normalizeTroncoId(k), k]));
+
+    const entries = [];
+    Object.keys(resetData).forEach(k => {
+      if(k.startsWith("_")) return;
+      entries.push([k, resetData[k]]);
+    });
+    if(Array.isArray(resetData.tronchi)){
+      resetData.tronchi.forEach(item => {
+        if(!item || typeof item !== "object") return;
+        const itemId = item.tronco ?? item.id ?? item.key;
+        if(itemId == null) return;
+        entries.push([String(itemId), item]);
+      });
+    }else if(resetData.tronchi && typeof resetData.tronchi === "object"){
+      Object.keys(resetData.tronchi).forEach(k => {
+        entries.push([k, resetData.tronchi[k]]);
+      });
+    }
+
+    let touched = false;
+    entries.forEach(([idRaw, item]) => {
+      if(!item || typeof item !== "object") return;
+      const normalized = normalizeTroncoId(idRaw);
+      const id = idMap.get(normalized) || normalized;
+      if(!next[id]) return;
+
+      // done nel reset è RELATIVO al nuovo punto: mantiene totali/%/tratteggio coerenti.
+      const relDone = Number(item.done);
+      if(Number.isFinite(relDone)){
+        const baseDone = Number(next[id].done) || 0;
+        const tot = Number(next[id].tot) || 0;
+        const mergedDone = Math.max(0, baseDone + Math.max(0, relDone));
+        next[id] = { ...next[id], done: Math.min(mergedDone, tot || mergedDone) };
+        touched = true;
+      }
+
+      if(Array.isArray(item.forceProgressPoint) && item.forceProgressPoint.length === 2){
+        SPECIAL_PROGRESS[String(id)] = {
+          ...(SPECIAL_PROGRESS[String(id)] || {}),
+          forceProgressPoint: item.forceProgressPoint
+        };
+        touched = true;
+      }
+    });
+
+    if(!touched) return { avanz, used:false };
+
+    next._updated = resetData._updated;
+    return { avanz: next, used:true };
+  }
+
   function updateScaleStyles(){
     const lat = map.getCenter().lat;
     const weight = pipeWeightPx(lat);
@@ -749,11 +863,14 @@
   Promise.all([
     fetch(FILE_TRONCHI + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("tronchi.geojson HTTP " + r.status); return r.json(); }),
     fetch(FILE_AVANZ   + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("avanzamento.json HTTP " + r.status); return r.json(); }),
+    fetch(FILE_PROGRESSIVA_RESET + "?cb=" + CB).then(r => r.ok ? r.json() : null).catch(() => null),
     fetch(FILE_PEZZI   + "?cb=" + CB).then(r => { if(!r.ok) throw new Error("pezzi speciali.geojson HTTP " + r.status); return r.json(); })
   ])
-  .then(([geo, avanz, pezzi]) => {
+  .then(([geo, avanzRaw, resetRaw, pezzi]) => {
 
-    setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON"));
+    const { avanz, used: resetUsed } = applyResetProgressiva(avanzRaw, resetRaw);
+    const suffix = resetUsed ? " (reset progressiva attivo)" : "";
+    setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON") + suffix);
 
     baseDate = avanz._baseline_date || "2026-01-27";
     baseMap  = avanz._baseline_done || {};
