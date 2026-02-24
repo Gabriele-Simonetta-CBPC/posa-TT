@@ -2,6 +2,7 @@
   "_updated": "2026-02-24 08:30",
   "_force": true,
   "_note": "File unico reset/progressiva. forceProgressPoint ha la sua data (forceProgressPointDate). Se done ha data successiva (doneDate), viene interpretato come progressiva dal force point; se force point manca vale la logica base da punto 0.",
+  "_note": "File unico reset/progressiva. I done qui presenti sono usati come valori di ricalcolo (override) quando il reset è attivo; forceProgressPoint mantiene il punto di avanzamento. Con _force=true il reset viene applicato sempre.",
   "PV": {
     "done": 282,
     "forceProgressPoint": [
