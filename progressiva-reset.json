@@ -1,14 +1,15 @@
 {
-  "_updated": "2026-02-24 17:00",
-  "_note": "Se _updated è successivo ad avanzamento.json, done è interpretato come metri RELATIVI dal nuovo punto e viene sommato al done corrente del tronco.",
+  "_updated": "2026-02-24 17:30",
+  "_note": "Supporta reset come chiavi dirette, tronchi[] o tronchi{}; done è relativo e si somma al done corrente.",
   "1": {
     "done": 0,
     "forceProgressPoint": [
       9.45164625,
       45.0004071667
     ]
-  }
-"4": {
+  },
+  "tronchi": {
+    "4": {
     "done": 0,
     "forceProgressPoint": [
       9.536320,
@@ -21,5 +22,6 @@
       9.496017,
       44.992234
     ]
-  }      
+  }    
+             }
 }

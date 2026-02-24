@@ -801,6 +801,10 @@
         if(itemId == null) return;
         entries.push([String(itemId), item]);
       });
+    }else if(resetData.tronchi && typeof resetData.tronchi === "object"){
+      Object.keys(resetData.tronchi).forEach(k => {
+        entries.push([k, resetData.tronchi[k]]);
+      });
     }
 
     let touched = false;
@@ -864,7 +868,7 @@
   .then(([geo, avanzRaw, resetRaw, pezzi]) => {
 
     const { avanz, used: resetUsed } = applyResetProgressiva(avanzRaw, resetRaw);
-    const suffix = resetUsed ? " (progressiva identificata con rilievo topografico)" : "";
+    const suffix = resetUsed ? " (reset progressiva attivo)" : "";
     setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON") + suffix);
 
     baseDate = avanz._baseline_date || "2026-01-27";
