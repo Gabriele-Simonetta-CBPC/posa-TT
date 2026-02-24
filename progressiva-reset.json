@@ -1,6 +1,6 @@
 {
   "_updated": "2026-02-24 08:30",
-  "_note": "Se _updated è successivo ad avanzamento.json, i valori done qui presenti sostituiscono l'avanzamento per il reset della progressiva.",
+  "_note": "Se _updated è successivo ad avanzamento.json, done è interpretato come metri RELATIVI dal nuovo punto e viene sommato al done corrente del tronco.",
   "1": {
     "done": 0,
     "forceProgressPoint": [
@@ -8,7 +8,7 @@
       45.0004071667
     ]
   }
- "4": {
+"4": {
     "done": 0,
     "forceProgressPoint": [
       9.536320,
@@ -21,5 +21,5 @@
       9.496017,
       44.992234
     ]
-  }    
+  }     
 }
