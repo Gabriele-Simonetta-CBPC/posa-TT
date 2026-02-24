@@ -1,0 +1,12 @@
+{
+  "_updated": "2026-02-20 08:30",
+  "_note": "Supporta reset come chiavi dirette, tronchi[] o tronchi{}; done è relativo e si somma al done corrente.",
+  "1": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.45164625,
+      45.0004071667
+    ]
+  },
+  "tronchi": {}
+}
