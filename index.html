@@ -533,7 +533,7 @@
     const perc = (tot > 0) ? Math.min(done/tot, 1) : 0;
     const conf = SPECIAL_PROGRESS[String(troncoId)];
 
-    if(conf?.forceProgressPoint?.length === 2){
+    if(conf?.forceProgressPoint?.length === 2 && conf?.lockProgressPoint !== false){
       return { ok:true, perc, point: turf.point(conf.forceProgressPoint) };
     }
 
@@ -847,6 +847,28 @@
     return (boundedM / totalM) * tot;
   }
 
+  function readDatedDone(item){
+    if(item?.done && typeof item.done === "object"){
+      const v = Number(item.done.value ?? item.done.done ?? item.done.m);
+      return {
+        value: Number.isFinite(v) ? v : null,
+        date: parseFlexibleDate(item.done.date ?? item.done.updated ?? item.done._updated ?? "")
+      };
+    }
+    const raw = Number(item?.done);
+    return {
+      value: Number.isFinite(raw) ? raw : null,
+      date: parseFlexibleDate(item?.doneDate ?? item?.doneUpdated ?? item?.done_updated ?? "")
+    };
+  }
+
+  function readForcePointInfo(item){
+    const point = item?.forceProgressPoint ?? item?.forcePoint ?? item?.progressPoint;
+    const validPoint = Array.isArray(point) && point.length === 2 ? point : null;
+    const date = parseFlexibleDate(item?.forceProgressPointDate ?? item?.forcePointDate ?? item?.forcePointUpdated ?? item?.force_updated ?? "");
+    return { point: validPoint, date };
+  }
+
   function applyResetProgressiva(avanz, resetData, features){
     if(!resetData || typeof resetData !== "object") return { avanz, used:false };
 
@@ -885,26 +907,48 @@
       const id = idMap.get(normalized) || normalized;
       if(!next[id]) return;
 
-      if(Array.isArray(item.forceProgressPoint) && item.forceProgressPoint.length === 2){
+      const tot = Number(next[id].tot) || 0;
+      const { point: forcePoint, date: forceDate } = readForcePointInfo(item);
+      const { value: doneValue, date: doneDate } = readDatedDone(item);
+
+      let doneAbs = null;
+      if(forcePoint){
         SPECIAL_PROGRESS[String(id)] = {
           ...(SPECIAL_PROGRESS[String(id)] || {}),
-          forceProgressPoint: item.forceProgressPoint
+          forceProgressPoint: forcePoint,
+          lockProgressPoint: true
         };
         touched = true;
+
+        const anchorDone = computeDoneFromForcedPoint(geomIndex[id], id, tot, forcePoint);
+        if(Number.isFinite(anchorDone)){
+          doneAbs = anchorDone;
+
+          if(Number.isFinite(doneValue)){
+            const doneIsAfterForce = doneDate && forceDate && doneDate.getTime() > forceDate.getTime();
+            if(doneIsAfterForce){
+              doneAbs = anchorDone + doneValue;
+              SPECIAL_PROGRESS[String(id)] = {
+                ...(SPECIAL_PROGRESS[String(id)] || {}),
+                lockProgressPoint: false
+              };
+            }else if(!forceDate && doneDate){
+              doneAbs = anchorDone + doneValue;
+              SPECIAL_PROGRESS[String(id)] = {
+                ...(SPECIAL_PROGRESS[String(id)] || {}),
+                lockProgressPoint: false
+              };
+            }
+          }
+        }
       }
 
-      const tot = Number(next[id].tot) || 0;
-      const doneFromPoint = computeDoneFromForcedPoint(geomIndex[id], id, tot, item.forceProgressPoint);
-      if(Number.isFinite(doneFromPoint)){
-        const boundedDone = Math.max(0, Math.min(doneFromPoint, tot || doneFromPoint));
-        next[id] = { ...next[id], done: boundedDone };
-        touched = true;
-        return;
+      if(!Number.isFinite(doneAbs) && Number.isFinite(doneValue)){
+        doneAbs = doneValue;
       }
 
-      const resetDone = Number(item.done);
-      if(Number.isFinite(resetDone)){
-        const boundedDone = Math.max(0, Math.min(resetDone, tot || resetDone));
+      if(Number.isFinite(doneAbs)){
+        const boundedDone = Math.max(0, Math.min(doneAbs, tot || doneAbs));
         next[id] = { ...next[id], done: boundedDone };
         touched = true;
       }
