@@ -23,11 +23,6 @@
   },
   "2": {
     "done": 2328.95,
-    "forceProgressPoint": [
-      9.47240311,
-      44.98454218
-    ],
-    "forceProgressPointDate": "2026-02-20 08:30",
     "doneDate": "2026-02-24 08:30"
   },
   "3-1": {
@@ -51,8 +46,8 @@
   "4": {
     "done": 1592.79,
     "forceProgressPoint": [
-      9.5388638,
-      44.99038394
+      9.495713,
+      44.992130
     ],
     "forceProgressPointDate": "2026-02-24 08:30",
     "doneDate": "2026-02-20 08:30"
