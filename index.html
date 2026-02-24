@@ -533,7 +533,7 @@
     const perc = (tot > 0) ? Math.min(done/tot, 1) : 0;
     const conf = SPECIAL_PROGRESS[String(troncoId)];
 
-    if(conf?.forceProgressPoint?.length === 2){
+    if(conf?.forceProgressPoint?.length === 2 && conf?.lockProgressPoint !== false){
       return { ok:true, perc, point: turf.point(conf.forceProgressPoint) };
     }
 
@@ -778,7 +778,98 @@
       .replace(/_/g, "-");
   }
 
-  function applyResetProgressiva(avanz, resetData){
+  function buildTroncoGeometryIndex(features, avanz){
+    const groups = {};
+    (features || []).forEach(f => {
+      const id = String(getTroncoId(f?.properties) || "");
+      if(!id || !avanz?.[id]) return;
+      groups[id] = groups[id] || [];
+      groups[id].push(f);
+    });
+
+    const out = {};
+    Object.keys(groups).forEach(id => {
+      let ordered = [...groups[id]];
+      if(id === "PV"){
+        ordered.sort((a,b) => {
+          const ca = turf.centroid(a)?.geometry?.coordinates?.[1] ?? 0;
+          const cb = turf.centroid(b)?.geometry?.coordinates?.[1] ?? 0;
+          return ca - cb;
+        });
+      }
+
+      let cursor = 0;
+      const refs = ordered.map(f => {
+        const lenM = (Number(turf.length(f, {units:"kilometers"})) || 0) * 1000;
+        const ref = { feature: f, startM: cursor, lenM };
+        cursor += lenM;
+        return ref;
+      });
+
+      out[id] = { refs, totalM: cursor };
+    });
+    return out;
+  }
+
+  function computeDoneFromForcedPoint(troncoGeom, troncoId, tot, forcePoint){
+    if(!troncoGeom || !Array.isArray(forcePoint) || forcePoint.length !== 2) return null;
+    const totalM = Number(troncoGeom.totalM) || 0;
+    if(totalM <= 0 || tot <= 0) return null;
+
+    const p = turf.point(forcePoint);
+    let best = null;
+    troncoGeom.refs.forEach(ref => {
+      const hit = turf.nearestPointOnLine(ref.feature, p, { units:"kilometers" });
+      const locM = (Number(hit?.properties?.location) || 0) * 1000;
+      const dist = Number(hit?.properties?.dist);
+      const distM = Number.isFinite(dist) ? dist * 1000 : Infinity;
+      if(!best || distM < best.distM){
+        best = { ref, locM, distM };
+      }
+    });
+    if(!best) return null;
+
+    const absM = Math.max(0, Math.min(totalM, best.ref.startM + best.locM));
+    let doneM = REVERSE_PROGRESS ? (totalM - absM) : absM;
+
+    const conf = SPECIAL_PROGRESS[String(troncoId)] || {};
+    if(REVERSE_PROGRESS && conf?.fixedLaidSegment?.length === 2 && troncoGeom.refs[0]?.feature){
+      const baseFeature = troncoGeom.refs[0].feature;
+      const a = turf.point(conf.fixedLaidSegment[0]);
+      const b = turf.point(conf.fixedLaidSegment[1]);
+      const ap = turf.nearestPointOnLine(baseFeature, a, { units:"kilometers" });
+      const bp = turf.nearestPointOnLine(baseFeature, b, { units:"kilometers" });
+      const fixedM = Math.abs((Number(ap?.properties?.location) || 0) - (Number(bp?.properties?.location) || 0)) * 1000;
+      doneM += fixedM;
+    }
+
+    const boundedM = Math.max(0, Math.min(doneM, totalM));
+    return (boundedM / totalM) * tot;
+  }
+
+  function readDatedDone(item){
+    if(item?.done && typeof item.done === "object"){
+      const v = Number(item.done.value ?? item.done.done ?? item.done.m);
+      return {
+        value: Number.isFinite(v) ? v : null,
+        date: parseFlexibleDate(item.done.date ?? item.done.updated ?? item.done._updated ?? "")
+      };
+    }
+    const raw = Number(item?.done);
+    return {
+      value: Number.isFinite(raw) ? raw : null,
+      date: parseFlexibleDate(item?.doneDate ?? item?.doneUpdated ?? item?.done_updated ?? "")
+    };
+  }
+
+  function readForcePointInfo(item){
+    const point = item?.forceProgressPoint ?? item?.forcePoint ?? item?.progressPoint;
+    const validPoint = Array.isArray(point) && point.length === 2 ? point : null;
+    const date = parseFlexibleDate(item?.forceProgressPointDate ?? item?.forcePointDate ?? item?.forcePointUpdated ?? item?.force_updated ?? "");
+    return { point: validPoint, date };
+  }
+
+  function applyResetProgressiva(avanz, resetData, features){
     if(!resetData || typeof resetData !== "object") return { avanz, used:false };
 
     const resetDate = parseFlexibleDate(resetData._updated || "");
@@ -790,6 +881,7 @@
     const existingIds = Object.keys(next).filter(k => !k.startsWith("_"));
     const idMap = new Map(existingIds.map(k => [normalizeTroncoId(k), k]));
 
+    const geomIndex = buildTroncoGeometryIndex(features, next);
     const entries = [];
     Object.keys(resetData).forEach(k => {
       if(k.startsWith("_")) return;
@@ -815,21 +907,49 @@
       const id = idMap.get(normalized) || normalized;
       if(!next[id]) return;
 
-      // done nel reset è il valore da usare per il RICALCOLO (override),
-      // così tratteggio, % e complessivo si basano interamente sul reset attivo.
-      const resetDone = Number(item.done);
-      if(Number.isFinite(resetDone)){
-        const tot = Number(next[id].tot) || 0;
-        const boundedDone = Math.max(0, Math.min(resetDone, tot || resetDone));
-        next[id] = { ...next[id], done: boundedDone };
-        touched = true;
-      }
+      const tot = Number(next[id].tot) || 0;
+      const { point: forcePoint, date: forceDate } = readForcePointInfo(item);
+      const { value: doneValue, date: doneDate } = readDatedDone(item);
 
-      if(Array.isArray(item.forceProgressPoint) && item.forceProgressPoint.length === 2){
+      let doneAbs = null;
+      if(forcePoint){
         SPECIAL_PROGRESS[String(id)] = {
           ...(SPECIAL_PROGRESS[String(id)] || {}),
-          forceProgressPoint: item.forceProgressPoint
+          forceProgressPoint: forcePoint,
+          lockProgressPoint: true
         };
+        touched = true;
+
+        const anchorDone = computeDoneFromForcedPoint(geomIndex[id], id, tot, forcePoint);
+        if(Number.isFinite(anchorDone)){
+          doneAbs = anchorDone;
+
+          if(Number.isFinite(doneValue)){
+            const doneIsAfterForce = doneDate && forceDate && doneDate.getTime() > forceDate.getTime();
+            if(doneIsAfterForce){
+              doneAbs = anchorDone + doneValue;
+              SPECIAL_PROGRESS[String(id)] = {
+                ...(SPECIAL_PROGRESS[String(id)] || {}),
+                lockProgressPoint: false
+              };
+            }else if(!forceDate && doneDate){
+              doneAbs = anchorDone + doneValue;
+              SPECIAL_PROGRESS[String(id)] = {
+                ...(SPECIAL_PROGRESS[String(id)] || {}),
+                lockProgressPoint: false
+              };
+            }
+          }
+        }
+      }
+
+      if(!Number.isFinite(doneAbs) && Number.isFinite(doneValue)){
+        doneAbs = doneValue;
+      }
+
+      if(Number.isFinite(doneAbs)){
+        const boundedDone = Math.max(0, Math.min(doneAbs, tot || doneAbs));
+        next[id] = { ...next[id], done: boundedDone };
         touched = true;
       }
     });
@@ -868,14 +988,14 @@
   ])
   .then(([geo, avanzRaw, resetRaw, pezzi]) => {
 
-    const { avanz, used: resetUsed } = applyResetProgressiva(avanzRaw, resetRaw);
+    const cleanFeatures = (geo.features || []).map(sanitizeFeature).filter(Boolean);
+
+    const { avanz, used: resetUsed } = applyResetProgressiva(avanzRaw, resetRaw, cleanFeatures);
     const suffix = resetUsed ? " (reset progressiva attivo)" : "";
     setUpdated("aggiornato: " + (avanz._updated || "NON INDICATO nel JSON") + suffix);
 
     baseDate = avanz._baseline_date || "2026-01-27";
     baseMap  = avanz._baseline_done || {};
-
-    const cleanFeatures = (geo.features || []).map(sanitizeFeature).filter(Boolean);
 
     // dataset tabella (1 riga per tronco) + dataset mappa (1 riga per feature)
     const groups = {};
