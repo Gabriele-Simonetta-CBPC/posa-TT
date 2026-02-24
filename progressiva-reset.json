@@ -1,0 +1,11 @@
+{
+  "_updated": "2026-02-20 08:30",
+  "_note": "Se _updated è successivo ad avanzamento.json, i valori done qui presenti sostituiscono l'avanzamento per il reset della progressiva.",
+  "1": {
+    "done": 0,
+    "forceProgressPoint": [
+      9.45164625,
+      45.0004071667
+    ]
+  }
+}
