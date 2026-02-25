@@ -148,6 +148,29 @@
   .line-legend .sample{ width:28px; height:0; border-top:3px solid #333; }
   .line-legend .sample.dashed{ border-top-style:dashed; }
 
+  .scale-readout{
+    background:#fff;
+    border:1px solid #d9d9d9;
+    border-radius:10px;
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+    padding:6px 10px;
+    font-size:12px;
+    color:#111;
+    line-height:1.25;
+    font-weight:700;
+    margin-bottom:8px;
+  }
+
+  .leaflet-control-scale{
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 6px 16px rgba(0,0,0,.08);
+  }
+  .leaflet-control-scale-line{
+    border-color:#d9d9d9;
+    background:#fff;
+  }
+
   .special-legend{
     background:#fff;
     border:1px solid #d9d9d9;
@@ -370,6 +393,26 @@
   });
   map.addControl(new LineLegend());
 
+  L.control.scale({
+    position: "bottomleft",
+    imperial: false,
+    maxWidth: 160,
+    updateWhenIdle: false
+  }).addTo(map);
+
+  const ScaleReadout = L.Control.extend({
+    options: { position: "bottomleft" },
+    onAdd: function(){
+      const div = L.DomUtil.create("div", "scale-readout");
+      div.textContent = "Scala indicativa: —";
+      L.DomEvent.disableClickPropagation(div);
+      L.DomEvent.disableScrollPropagation(div);
+      return div;
+    }
+  });
+  const scaleReadout = new ScaleReadout().addTo(map);
+  const scaleReadoutEl = scaleReadout.getContainer();
+
   const SpecialLegend = L.Control.extend({
     options: { position: "bottomleft" },
     onAdd: function(){
@@ -474,6 +517,22 @@
   }
 
   const clamp = (v, mn, mx) => Math.max(mn, Math.min(mx, v));
+  function approxScaleDenominator(lat, zoom){
+    const mpp = metersPerPixel(lat, zoom);
+    const inchesPerMeter = 39.37;
+    const cssDpi = 96;
+    return mpp * inchesPerMeter * cssDpi;
+  }
+  function formatScale(value){
+    if(!Number.isFinite(value) || value <= 0) return "—";
+    return "1:" + Math.round(value).toLocaleString("it-IT");
+  }
+  function updateScaleReadout(){
+    if(!scaleReadoutEl) return;
+    const lat = map.getCenter().lat;
+    const scale = approxScaleDenominator(lat, map.getZoom());
+    scaleReadoutEl.textContent = `Scala indicativa: ${formatScale(scale)}`;
+  }
   function metersPerPixel(lat, zoom){
     const latRad = (lat * Math.PI) / 180;
     return 156543.03392 * Math.cos(latRad) / Math.pow(2, zoom);
@@ -512,7 +571,21 @@
     const fillAlpha = posato ? 0.45 : 0.95;
     const rgb = [parseInt(color.slice(1,3),16), parseInt(color.slice(3,5),16), parseInt(color.slice(5,7),16)];
     const bg = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${fillAlpha})`;
-    const html = `<div class="special-marker ${shape}" style="width:${w.toFixed(1)}px; height:${h.toFixed(1)}px; border:${borderW.toFixed(1)}px ${posato ? "dashed" : "solid"} ${color}; background:${bg};"></div>`;
+
+    const vbW = 100;
+    const vbH = Math.max(60, Math.round((h / Math.max(w, 0.1)) * vbW));
+    const strokeDash = posato ? '8 6' : '';
+
+    let shapeSvg = '';
+    if(shape === "diamond") {
+      shapeSvg = `<polygon points="50,8 92,${Math.round(vbH/2)} 50,${vbH-8} 8,${Math.round(vbH/2)}" fill="${bg}" stroke="${color}" stroke-width="10" ${strokeDash ? `stroke-dasharray="${strokeDash}"` : ''}/>`;
+    } else if(shape === "square") {
+      shapeSvg = `<rect x="8" y="18" width="84" height="${vbH-36}" rx="6" ry="6" fill="${bg}" stroke="${color}" stroke-width="10" ${strokeDash ? `stroke-dasharray="${strokeDash}"` : ''}/>`;
+    } else {
+      shapeSvg = `<circle cx="50" cy="${Math.round(vbH/2)}" r="${Math.max(18, Math.round(vbH/2)-10)}" fill="${bg}" stroke="${color}" stroke-width="10" ${strokeDash ? `stroke-dasharray="${strokeDash}"` : ''}/>`;
+    }
+
+    const html = `<div style="width:${w.toFixed(1)}px; height:${h.toFixed(1)}px;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vbW} ${vbH}" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">${shapeSvg}</svg></div>`;
 
     return {
       icon: L.divIcon({
@@ -1114,7 +1187,10 @@
     buildFilters();
     applyFilters();
     updateScaleStyles();
+    updateScaleReadout();
     map.on("zoomend", updateScaleStyles);
+    map.on("zoom", updateScaleReadout);
+    map.on("move", updateScaleReadout);
   })
   .catch(err => {
     console.error(err);
