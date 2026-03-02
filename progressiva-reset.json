@@ -1,25 +1,25 @@
 
 {
-  "_updated": "2026-02-27 08:30",
+  "_updated": "2026-03-02 08:30",
   "_force": true,
   "_note": "File unico reset/progressiva. forceProgressPoint ha la sua data (forceProgressPointDate). Se done ha data successiva (doneDate), viene interpretato come progressiva dal force point; se force point manca vale la logica base da punto 0.",
   "_note": "File unico reset/progressiva. I done qui presenti sono usati come valori di ricalcolo (override) quando il reset è attivo; forceProgressPoint mantiene il punto di avanzamento. Con _force=true il reset viene applicato sempre.",
   "PV": {
     "done": 282,
     "forceProgressPoint": [
-      9.4545888,
-      45.0084681
+     9.455617,
+	 45.011637 
     ],
-    "forceProgressPointDate": "2026-02-20 08:30",
+    "forceProgressPointDate": "2026-03-02 08:30",
     "doneDate": "2026-02-24 08:30"
   },
   "1": {
     "done": 4.39,
     "forceProgressPoint": [
-      9.45164625,
-      45.00040717
+      9.450992,
+	  45.002047 
     ],
-    "forceProgressPointDate": "2026-02-24 08:30",
+    "forceProgressPointDate": "2026-03-02 08:30",
     "doneDate": "2026-02-26 08:30"
   },
   "2": {
@@ -47,14 +47,20 @@
   "4": {
     "done": 228,
     "forceProgressPoint": [
-      9.536320,
-      44.990436
+      
+	  9.533433,
+      44.990393
     ],
-    "forceProgressPointDate": "2026-02-24 08:30",
+    "forceProgressPointDate": "2026-03-02 08:30",
     "doneDate": "2026-02-26 08:30"
   },
   "5": {
     "done": 1598.9,
+    "forceProgressPoint": [
+       9.555226,
+      44.985482
+    ],
+    "forceProgressPointDate": "2026-03-02 08:30",
     "doneDate": "2026-02-26 08:30"
   }
 }
